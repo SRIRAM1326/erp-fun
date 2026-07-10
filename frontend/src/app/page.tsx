@@ -1,3 +1,4 @@
+// Trigger Vercel rebuild with correct root directory settings
 import Link from 'next/link';
 import { QrCode, Wallet, Gift, Plane, CheckCircle, ArrowRight } from 'lucide-react';
 
