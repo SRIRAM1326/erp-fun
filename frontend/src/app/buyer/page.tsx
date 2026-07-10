@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { ArrowUpRight, ArrowDownRight, ChevronRight, X as CloseIcon } from 'lucide-react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 export default function BuyerDashboard() {
   const [data, setData] = useState<any>(null);
@@ -35,7 +35,7 @@ export default function BuyerDashboard() {
   const nextTierPoints = 15000;
   const progressPercent = Math.min((points / nextTierPoints) * 100, 100);
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -43,7 +43,7 @@ export default function BuyerDashboard() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
   };
@@ -308,7 +308,8 @@ export default function BuyerDashboard() {
                 {spinResult ? (
                   <motion.div 
                     initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1, type: 'spring' }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: 'spring' }}
                     className="text-center"
                   >
                     <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-1">You Won</p>

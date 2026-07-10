@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { Mail, Phone, MapPin, Shield, Bell, Users, Copy, CheckCircle2, QrCode } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 export default function ProfilePage() {
   const [referralCode, setReferralCode] = useState('');
@@ -28,12 +28,12 @@ export default function ProfilePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: 'spring' } }
   };
