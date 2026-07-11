@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { Mail, Phone, MapPin, Shield, Bell, Users, Copy, CheckCircle2, QrCode } from 'lucide-react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 export default function ProfilePage() {
   const [referralCode, setReferralCode] = useState('');

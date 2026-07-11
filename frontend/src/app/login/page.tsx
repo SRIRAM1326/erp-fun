@@ -30,8 +30,9 @@ export default function LoginPage() {
       } else {
         router.push('/buyer');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Authentication failed. Please verify your credentials.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Authentication failed. Please verify your credentials.');
     } finally {
       setLoading(false);
     }

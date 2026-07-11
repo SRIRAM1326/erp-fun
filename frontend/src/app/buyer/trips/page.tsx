@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Plane, Calendar, Info, Trophy, MapPin, CheckCircle2, Award } from 'lucide-react';
+import { Calendar, Info, Trophy, MapPin, CheckCircle2, Award } from 'lucide-react';
 
 export default function TripProgressPage() {
   const currentPoints = 12450;
@@ -16,7 +16,13 @@ export default function TripProgressPage() {
     { points: 20000, title: 'Platinum Trip', reward: 'Ooty Dealer Meet 2026', achieved: currentPoints >= 20000 },
   ];
 
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  interface LeaderboardEntry {
+    rank: number;
+    name: string;
+    points: number;
+  }
+
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -41,6 +47,7 @@ export default function TripProgressPage() {
       <div className="bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-800">
         <div className="relative h-64">
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent z-10"></div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="https://images.unsplash.com/photo-1588631168050-705bfb4260d5?q=80&w=1200&auto=format&fit=crop" alt="Ooty" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute top-6 left-6 z-20 bg-amber-500 text-slate-900 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
             Featured Campaign

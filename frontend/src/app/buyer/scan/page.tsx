@@ -3,15 +3,30 @@
 import { useState, useEffect } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { api } from '@/lib/api';
-import { CheckCircle2, XCircle, Camera, QrCode, Image as ImageIcon, Upload } from 'lucide-react';
+import { CheckCircle2, XCircle, Camera, QrCode, Upload } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ScanPage() {
-  const [scanResult, setScanResult] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [manualCode, setManualCode] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleClaim = async (code: string) => {
+    setLoading(true);
+    setStatus('idle');
+    try {
+      const res = await api.post('/buyer/scan', { code_value: code });
+      setStatus('success');
+      setMessage(res.data.message);
+    } catch (err: unknown) {
+      setStatus('error');
+      const error = err as { response?: { data?: { message?: string } } };
+      setMessage(error.response?.data?.message || 'Invalid or expired QR code.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner(
@@ -22,11 +37,10 @@ export default function ScanPage() {
 
     const onScanSuccess = (decodedText: string) => {
       scanner.clear();
-      setScanResult(decodedText);
       handleClaim(decodedText);
     };
 
-    const onScanFailure = (error: any) => {};
+    const onScanFailure = (_error: unknown) => {};
 
     scanner.render(onScanSuccess, onScanFailure);
 
@@ -34,21 +48,6 @@ export default function ScanPage() {
       scanner.clear().catch(console.error);
     };
   }, []);
-
-  const handleClaim = async (code: string) => {
-    setLoading(true);
-    setStatus('idle');
-    try {
-      const res = await api.post('/buyer/scan', { code_value: code });
-      setStatus('success');
-      setMessage(res.data.message);
-    } catch (err: any) {
-      setStatus('error');
-      setMessage(err.response?.data?.message || 'Invalid or expired QR code.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="max-w-xl mx-auto space-y-6">

@@ -152,7 +152,7 @@ export default function LandingPage() {
               
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6 relative z-10">Already buying from us?</h2>
               <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto relative z-10">
-                Don't leave points on the table. Join the loyalty program today and start earning rewards on your very next order.
+                Don&apos;t leave points on the table. Join the loyalty program today and start earning rewards on your very next order.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
                 <Link href="/login" className="bg-amber-500 text-slate-900 font-semibold px-8 py-4 rounded-xl hover:bg-amber-400 transition-all shadow-lg hover:shadow-amber-500/25">
