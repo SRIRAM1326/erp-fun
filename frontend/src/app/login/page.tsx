@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { Building2, ArrowRight, ShieldCheck, Mail, Lock } from 'lucide-react';
+import { Building2, ArrowRight, ShieldCheck, Mail, Lock, Award, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
@@ -169,6 +169,19 @@ export default function LoginPage() {
           <div className="mt-8 text-center text-xs font-semibold text-slate-400 space-y-1">
             <p>Admin Access: admin@example.com / admin123</p>
             <p>Buyer Access: buyer@example.com / buyer123</p>
+          </div>
+
+          <div className="mt-6 flex justify-center">
+            <a 
+              href="/Reward_Points_System.html" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-amber-600 bg-slate-100 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 rounded-lg transition-all shadow-sm cursor-pointer"
+            >
+              <Award className="w-3.5 h-3.5 text-amber-500" />
+              <span>Reward Points System Hub</span>
+              <ExternalLink className="w-3 h-3 opacity-60" />
+            </a>
           </div>
         </motion.div>
       </div>
