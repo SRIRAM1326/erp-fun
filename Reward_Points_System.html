@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reward Points System Control Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Premium SaaS Dashboard Dark Theme */
+    --bg-color: hsl(222, 47%, 8%);
+    --card-bg: hsl(222, 47%, 12%);
+    --card-border: hsl(222, 40%, 18%);
+    --text-primary: hsl(210, 40%, 98%);
+    --text-secondary: hsl(215, 20%, 75%);
+    --text-muted: hsl(215, 15%, 52%);
+    
+    --primary: hsl(226, 70%, 64%);
+    --primary-soft: hsla(226, 70%, 64%, 0.1);
+    --secondary: hsl(152, 65%, 45%);
+    --secondary-soft: hsla(152, 65%, 45%, 0.1);
+    
+    /* Category Accent Colors */
+    --clr-client: hsl(226, 70%, 64%);
+    --clr-client-soft: hsla(226, 70%, 64%, 0.1);
+    --clr-admin: hsl(199, 89%, 48%);
+    --clr-admin-soft: hsla(199, 89%, 48%, 0.1);
+    --clr-marketing: hsl(152, 65%, 45%);
+    --clr-marketing-soft: hsla(152, 65%, 45%, 0.1);
+    --clr-biz: hsl(266, 70%, 64%);
+    --clr-biz-soft: hsla(266, 70%, 64%, 0.1);
+    
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.08);
+    --box-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.25), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
+    --transition: all 0.2s ease-in-out;
+  }
+
+  [data-theme="light"] {
+    /* Premium SaaS Dashboard Light Theme */
+    --bg-color: hsl(210, 40%, 97%);
+    --card-bg: hsl(0, 0%, 100%);
+    --card-border: hsl(210, 30%, 90%);
+    --text-primary: hsl(222, 47%, 12%);
+    --text-secondary: hsl(215, 20%, 38%);
+    --text-muted: hsl(215, 12%, 55%);
+    
+    --primary: hsl(226, 68%, 56%);
+    --primary-soft: hsla(226, 68%, 56%, 0.08);
+    --secondary: hsl(152, 65%, 36%);
+    --secondary-soft: hsla(152, 65%, 36%, 0.08);
+
+    --clr-client: hsl(226, 68%, 56%);
+    --clr-client-soft: hsla(226, 68%, 56%, 0.08);
+    --clr-admin: hsl(199, 89%, 40%);
+    --clr-admin-soft: hsla(199, 89%, 40%, 0.08);
+    --clr-marketing: hsl(152, 65%, 36%);
+    --clr-marketing-soft: hsla(152, 65%, 36%, 0.08);
+    --clr-biz: hsl(266, 70%, 56%);
+    --clr-biz-soft: hsla(266, 70%, 56%, 0.08);
+
+    --box-shadow: 0 4px 6px -1px rgba(25, 35, 60, 0.03), 0 2px 4px -1px rgba(25, 35, 60, 0.02);
+    --box-shadow-hover: 0 10px 15px -3px rgba(25, 35, 60, 0.06), 0 4px 6px -2px rgba(25, 35, 60, 0.04);
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    line-height: 1.6;
+    transition: var(--transition);
+  }
+
+  /* Navigation Bar */
+  .navbar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    padding: 0 24px;
+    box-shadow: var(--box-shadow);
+  }
+
+  .nav-container {
+    max-width: 1656px;
+    margin: 0 auto;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--primary);
+  }
+
+  .logo-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    height: 100%;
+    align-items: center;
+  }
+
+  .nav-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--primary-soft);
+  }
+
+  .nav-tab.active {
+    color: var(--text-primary);
+    background: var(--primary-soft);
+    font-weight: 600;
+    border: 1px solid var(--card-border);
+  }
+
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .theme-btn {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+
+  .theme-btn:hover {
+    border-color: var(--primary);
+    color: var(--text-primary);
+    background: var(--primary-soft);
+  }
+
+  /* Page Wrapper */
+  .page-wrapper {
+    max-width: 1656px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  .page-content {
+    display: none;
+    animation: fadeIn 0.25s ease-out;
+  }
+
+  .page-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Page Headers */
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-header h2 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+  }
+
+  .page-header p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14.5px;
+    font-weight: 400;
+  }
+
+  /* Rule Cards & Grid */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 24px;
+    transition: var(--transition);
+  }
+
+  .card:hover {
+    border-color: var(--primary-soft);
+    box-shadow: var(--box-shadow-hover);
+  }
+
+  .card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+  }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+  }
+
+  .rule-card {
+    border-top: 3px solid var(--theme-color);
+    position: relative;
+  }
+
+  .rule-card.client { --theme-color: var(--clr-client); }
+  .rule-card.admin { --theme-color: var(--clr-admin); }
+  .rule-card.marketing { --theme-color: var(--clr-marketing); }
+  .rule-card.biz { --theme-color: var(--clr-biz); }
+
+  .rule-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rule-card li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    position: relative;
+    padding-left: 20px;
+  }
+
+  .rule-card li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 8px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--theme-color);
+  }
+
+  .rule-card li strong {
+    color: var(--text-primary);
+  }
+
+  /* Table styles */
+  .table-card {
+    overflow: hidden;
+    padding: 0;
+    border-radius: 12px;
+  }
+
+  .trace-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 13.5px;
+  }
+
+  .trace-table th {
+    background: hsla(0, 0%, 0%, 0.1);
+    border-bottom: 1px solid var(--card-border);
+    padding: 14px 20px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 14.5px;
+    color: var(--text-primary);
+  }
+
+  [data-theme="light"] .trace-table th {
+    background: hsl(210, 20%, 95%);
+  }
+
+  .trace-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--card-border);
+    color: var(--text-secondary);
+  }
+
+  .trace-table tr:hover td {
+    background: var(--primary-soft);
+    color: var(--text-primary);
+  }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid transparent;
+  }
+
+  .badge.primary { background: var(--primary-soft); color: var(--primary); border-color: var(--primary-soft); }
+  .badge.secondary { background: var(--secondary-soft); color: var(--secondary); border-color: var(--secondary-soft); }
+  .badge.neutral { background: hsla(0, 0%, 50%, 0.05); color: var(--text-muted); }
+
+  /* Config Grid & Form Controls */
+  .config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .form-input {
+    background: hsla(0, 0%, 0%, 0.12);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    transition: var(--transition);
+  }
+
+  [data-theme="light"] .form-input {
+    background: hsl(210, 20%, 98%);
+  }
+
+  .form-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 1px var(--primary);
+  }
+
+  .config-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .cfg-val {
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 1px dashed var(--primary);
+  }
+
+  /* Preset scenarios button style */
+  .preset-btn {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    color: var(--text-secondary);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: var(--transition);
+  }
+
+  .preset-btn:hover {
+    border-color: var(--primary);
+    color: var(--text-primary);
+    background: var(--primary-soft);
+  }
+
+  /* ========================================================= */
+  /* ===== MOCKUP 1: ADMIN LAPTOP SIDEBAR DASHBOARD ===== */
+  /* ========================================================= */
+  .app {
+    /* Scoped theme variables matching user's reference mockup image */
+    --app-paper: #F3F1EA;
+    --app-surface: #FFFFFF;
+    --app-line: #E4E1D6;
+    --app-ink: #161A16;
+    --app-ink-soft: #5B6459;
+    --app-sidebar: #1C1A14;
+    --app-amber: #B5791A;
+    --app-amber-soft: #FBF0DA;
+    --app-amber-deep: #8C5C10;
+    --app-ledger: #0B6E63;
+    --app-ledger-soft: #E4F1EE;
+    --app-rose: #9A3F33;
+    --app-rose-soft: #F6E6E2;
+    --app-danger: #B33A2E;
+    --app-danger-soft: #FBEAE7;
+
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto 36px auto;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--app-line);
+    box-shadow: 0 30px 60px -30px rgba(22, 26, 22, 0.3);
+    background: var(--app-paper);
+    color: var(--app-ink);
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .mock-sidebar {
+    width: 220px;
+    background: var(--app-sidebar);
+    color: #EFEBDD;
+    padding: 22px 16px;
+    flex-shrink: 0;
+    text-align: left;
+  }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 28px;
+    padding: 0 6px;
+    color: #EFEBDD;
+  }
+  .brand span {
+    color: var(--app-amber);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: #C9C4B3;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  .nav-item:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .nav-item .nic {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    background: currentColor;
+    opacity: 0.4;
+  }
+  .nav-item.active {
+    background: rgba(181, 121, 26, 0.18);
+    color: #F4D9A6;
+    font-weight: 600;
+  }
+  .nav-item.active .nic {
+    opacity: 1;
+    background: var(--app-amber);
+  }
+
+  .main {
+    flex: 1;
+    background: var(--app-surface);
+    padding: 26px 30px;
+    text-align: left;
+  }
+  .main-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+  }
+  .main-head .title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--app-ink);
+  }
+  .main-head .sub {
+    font-size: 12px;
+    color: var(--app-ink-soft);
+    margin-top: 2px;
+  }
+  .admin-chip {
+    font-size: 11.5px;
+    background: var(--app-amber-soft);
+    color: var(--app-amber-deep);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    border: 1px solid var(--app-amber-soft);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .stat-card {
+    background: var(--app-paper);
+    border: 1px solid var(--app-line);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: left;
+  }
+  .stat-card .sl {
+    font-size: 11px;
+    color: var(--app-ink-soft);
+    font-weight: 600;
+  }
+  .stat-card .sv {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 4px;
+    color: var(--app-ink);
+  }
+  .stat-card .sd {
+    font-size: 11px;
+    color: var(--app-ledger);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+  .stat-card .sd.warn {
+    color: var(--app-amber);
+  }
+
+  .panel {
+    background: var(--app-surface);
+    border: 1px solid var(--app-line);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .panel-head .pt {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--app-ink);
+  }
+  .panel-head a {
+    font-size: 11.5px;
+    color: var(--app-amber-deep);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .mock-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .mock-table th {
+    text-align: left;
+    color: var(--app-ink-soft);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--app-line);
+  }
+  .mock-table td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--app-line);
+    color: var(--app-ink);
+  }
+  .mock-table tr:last-child td {
+    border-bottom: none;
+  }
+  .badge.tag {
+    background: var(--app-rose-soft);
+    color: var(--app-rose);
+    margin-right: 4px;
+  }
+
+  .cols2 {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 16px;
+  }
+  .cfg-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--app-line);
+    font-size: 12.5px;
+    color: var(--app-ink);
+  }
+  .cfg-row:last-child {
+    border-bottom: none;
+  }
+  .cfg-row .cn {
+    color: var(--app-ink-soft);
+  }
+  .cfg-row .cv {
+    font-weight: 700;
+    background: var(--app-paper);
+    padding: 3px 10px;
+    border-radius: 8px;
+    color: var(--app-ink);
+  }
+
+  /* Admin Feature breakdown section */
+  .breakdown-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .breakdown-title {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 600;
+    margin: 0 0 18px 4px;
+    color: var(--text-primary);
+  }
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 18px;
+    border-left: 4px solid var(--clr-admin);
+  }
+  .feature-card .fnum {
+    font-family: 'Fraunces', serif;
+    font-size: 12px;
+    color: var(--clr-admin);
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .feature-card .ftitle {
+    font-size: 14.5px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+  .feature-card ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+  .feature-card li {
+    font-size: 12.5px;
+    line-height: 1.55;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+  }
+
+  /* ========================================================= */
+  /* ===== MOCKUP 2: MOBILE APP SCREENS GRID ===== */
+  /* ========================================================= */
+  .phone-grid-container {
+    max-width: 1656px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .group {
+    margin-bottom: 56px;
+  }
+  .group-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 18px 4px;
+    color: var(--text-primary);
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .group-title.client .dot { background: var(--clr-client); }
+  .group-title.marketing .dot { background: var(--clr-marketing); }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .col {
+    width: 390px;
+  }
+  .col-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Isolated Phone Mockup Styles with Scope Variables */
+  .phone {
+    /* Scoped theme colors for phone interior elements */
+    --paper: #F3F1EA;
+    --surface: #FFFFFF;
+    --line: #E4E1D6;
+    --ink: #161A16;
+    --ink-soft: #5B6459;
+    --ledger: #0B6E63;
+    --ledger-soft: #E4F1EE;
+    --ledger-deep: #08544B;
+    --amber: #B5791A;
+    --amber-soft: #FBF0DA;
+    --rose: #9A3F33;
+    --rose-soft: #F6E6E2;
+    --rose-deep: #7A312A;
+    --danger: #B33A2E;
+    --danger-soft: #FBEAE7;
+    --serif: 'Fraunces', serif;
+    --sans: 'Inter', system-ui, sans-serif;
+    
+    background: var(--surface);
+    border-radius: 34px;
+    border: 1px solid var(--line);
+    box-shadow: 0 20px 50px -20px rgba(22, 26, 22, 0.25);
+    overflow: hidden;
+    position: relative;
+    font-family: var(--sans);
+    color: var(--ink);
+    text-align: left;
+  }
+  .statusbar {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .screen {
+    padding: 0 18px 90px 18px;
+    min-height: 660px;
+    background: var(--paper);
+  }
+  .screen-head {
+    padding: 6px 4px 16px 4px;
+  }
+  .screen-head .eyebrow {
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+  .screen-head .title {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 600;
+    margin-top: 2px;
+    color: var(--ink);
+  }
+
+  .balance-card {
+    background: linear-gradient(160deg, var(--ledger) 0%, var(--ledger-deep) 100%);
+    border-radius: 20px;
+    padding: 22px 20px;
+    color: #EFF8F5;
+    margin-bottom: 16px;
+  }
+  .balance-card.rose {
+    background: linear-gradient(160deg, var(--rose) 0%, var(--rose-deep) 100%);
+    color: #FBEEEC;
+  }
+  .balance-card .label {
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .8;
+  }
+  .balance-card .amount {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 600;
+    margin: 4px 0 12px 0;
+  }
+  .balance-card .sub {
+    font-size: 12px;
+    opacity: .85;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, .2);
+    padding-top: 12px;
+  }
+  .earn-grid {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .earn-grid .stat {
+    flex: 1;
+    background: rgba(255, 255, 255, .12);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .earn-grid .stat .n {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .earn-grid .stat .t {
+    font-size: 10px;
+    opacity: .85;
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  .phone-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .phone-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--ink);
+  }
+  .phone-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+  }
+  .phone-chip.urgent { background: var(--danger-soft); color: var(--danger); }
+  .phone-chip.ok { background: var(--ledger-soft); color: var(--ledger); }
+  .phone-chip.wait { background: var(--amber-soft); color: var(--amber); }
+
+  .invoice-row {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .invoice-row b {
+    color: var(--ink);
+  }
+  .progress-track {
+    height: 8px;
+    background: var(--paper);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 8px 0 6px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 6px;
+  }
+  .progress-fill.day { background: var(--danger); }
+  .progress-fill.spend { background: var(--ledger); }
+  
+  .fine {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .bonus-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .phone-tag {
+    font-size: 10.5px;
+    font-weight: 600;
+    background: var(--amber-soft);
+    color: var(--amber);
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+
+  .activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .activity-item .meta {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .activity-item .desc {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .activity-item .pts {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ledger);
+    white-space: nowrap;
+  }
+  .activity-item .pts.neg { color: var(--ink-soft); }
+  .activity-item .pts.rose { color: var(--rose); }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .filter-chip {
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .filter-chip.active.m {
+    background: var(--rose);
+    border-color: var(--rose);
+  }
+
+  .month-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 18px 4px 8px 4px;
+  }
+  .month-label:first-child {
+    margin-top: 0;
+  }
+
+  .cta-btn {
+    background: var(--rose);
+    color: #fff;
+    text-align: center;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 13px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .ref-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ref-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .ref-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .ref-top .cust {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .ref-val {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+  .phone-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 20px;
+  }
+  .phone-status.paid { background: var(--ledger-soft); color: var(--ledger); }
+  .phone-status.pending { background: var(--amber-soft); color: var(--amber); }
+  .phone-status.no { background: var(--paper); color: var(--ink-soft); }
+
+  .split {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .split-box {
+    flex: 1;
+    border-radius: 12px;
+    padding: 10px 11px;
+  }
+  .split-box.you { background: var(--rose-soft); }
+  .split-box.cust { background: var(--ledger-soft); }
+  .split-box .sl {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    opacity: .8;
+  }
+  .split-box.you .sl { color: var(--rose); }
+  .split-box.cust .sl { color: var(--ledger); }
+  .split-box .sv {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 3px;
+  }
+  .split-box.you .sv { color: var(--rose-deep); }
+  .split-box.cust .sv { color: #08544B; }
+  .split-box .sd {
+    font-size: 9.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    line-height: 1.35;
+  }
+
+  .tier-card {
+    background: linear-gradient(160deg, #2B2A22, #161A16);
+    color: #F3F1EA;
+    border-radius: 18px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .tier-card .tname {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .tier-card .tsub {
+    font-size: 11.5px;
+    opacity: .75;
+    margin-top: 4px;
+  }
+  .rule-item {
+    display: flex;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .rule-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .rule-ic {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .rule-ic.g { background: var(--ledger-soft); color: var(--ledger); }
+  .rule-ic.a { background: var(--amber-soft); color: var(--amber); }
+  .rule-ic.r { background: var(--rose-soft); color: var(--rose); }
+  .rule-text .rt1 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .rule-text .rt2 {
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 1px;
+    line-height: 1.3;
+  }
+
+  .profile-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 4px 20px 4px;
+  }
+  .avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--ledger-soft);
+    color: var(--ledger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 20px;
+  }
+  .avatar.m { background: var(--rose-soft); color: var(--rose); }
+  .pname {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .pmeta {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+  .list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 13px 2px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .list-item:last-child {
+    border-bottom: none;
+  }
+  .list-item .li-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .li-ic {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: var(--paper);
+  }
+  .li-val {
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 110px;
+    padding-top: 10px;
+  }
+  .bar-chart .bwrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+  .bar-chart .bar {
+    width: 100%;
+    border-radius: 6px 6px 3px 3px;
+    background: var(--rose);
+  }
+  .bar-chart .bar.light {
+    background: var(--rose-soft);
+  }
+  .bar-chart .blabel {
+    font-size: 9.5px;
+    color: var(--ink-soft);
+  }
+
+  .tabbar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  }
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 9.5px;
+    color: var(--ink-soft);
+  }
+  .tab.active {
+    color: var(--ledger);
+    font-weight: 700;
+  }
+  .tab.active.m {
+    color: var(--rose);
+  }
+  .tab .ic {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: currentColor;
+    opacity: .18;
+  }
+  .tab.active .ic {
+    opacity: 1;
+  }
+
+  .meaning {
+    margin-top: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: left;
+    box-shadow: var(--box-shadow);
+  }
+  [data-theme="light"] .meaning {
+    background: hsl(210, 20%, 99%);
+  }
+  .meaning .mtitle {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .meaning ul {
+    margin: 0;
+    padding-left: 16px;
+  }
+  .meaning li {
+    font-size: 12.5px;
+    line-height: 1.55;
+    margin-bottom: 5px;
+    color: var(--text-secondary);
+  }
+  .meaning li:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Responsive styling */
+  @media (max-width: 992px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+    .cols2, .feature-grid {
+      grid-template-columns: 1fr;
+    }
+    .app {
+      flex-direction: column;
+      max-width: 100%;
+    }
+    .mock-sidebar {
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+    }
+    .brand {
+      margin-bottom: 0;
+      width: 100%;
+    }
+    .nav-item {
+      margin-bottom: 0;
+    }
+    .stat-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .nav-container {
+      flex-direction: column;
+      height: auto;
+      padding: 16px 0;
+      gap: 16px;
+    }
+    .stat-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* QR Scanner animation keyframes */
+  @keyframes scanLaser {
+    0% { top: 12px; }
+    50% { top: 220px; }
+    100% { top: 12px; }
+  }
+  @keyframes scannerPulse {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    100% { transform: scale(1.1); opacity: 1; }
+  }
+
+  /* Points Redemption Shop Styles */
+  .rewards-shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .shop-item {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: transform 0.2s ease;
+  }
+  .shop-item:hover {
+    transform: translateY(-2px);
+    border-color: var(--ledger);
+  }
+  .shop-item .icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+  }
+  .shop-item .name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  .shop-item .cost {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--ledger);
+    background: var(--ledger-soft);
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-top: 2px;
+  }
+
+  /* Gamified Dark Neon Purple Theme for Representative App */
+  .phone.marketing-phone {
+    --paper: #0c0a1f; /* Dark space background */
+    --surface: #14122d; /* Card surface */
+    --line: #242247;
+    --ink: #f1f0fb;
+    --ink-soft: #8f8bb3;
+    --ledger: #8b5cf6; /* Royal Purple */
+    --ledger-soft: rgba(139, 92, 246, 0.15);
+    --ledger-deep: #5b21b6;
+    --amber: #ffd700; /* Gold */
+    --amber-soft: rgba(255, 215, 0, 0.15);
+    --rose: #3b82f6; /* Payout Blue */
+    --rose-soft: rgba(59, 130, 246, 0.15);
+    --rose-deep: #1d4ed8;
+    --danger: #ec4899; /* Pink-Rose */
+    --danger-soft: rgba(236, 72, 153, 0.15);
+    
+    background: var(--surface);
+    border-color: var(--line);
+    box-shadow: 0 25px 60px -25px rgba(139, 92, 246, 0.3);
+  }
+  .phone.marketing-phone .statusbar {
+    color: var(--ink);
+  }
+  .phone.marketing-phone .tabbar {
+    background: #090717;
+    border-top-color: var(--line);
+  }
+  .phone.marketing-phone .tab {
+    color: rgba(241, 240, 251, 0.4);
+  }
+  .phone.marketing-phone .tab.active.m {
+    color: var(--ledger);
+  }
+  .phone.marketing-phone .tab.active.m .ic {
+    background: var(--ledger);
+    opacity: 1;
+  }
+  .phone.marketing-phone .phone-card {
+    background: var(--surface);
+    border-color: var(--line);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="logo-group">
+        <svg class="logo-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16v1M3 12a9 9 0 1118 0 9 9 0 0118 0z"></path>
+        </svg>
+        <span class="logo-title">RewardHub™</span>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-target="page-rules">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+          </svg>
+          Rules &amp; Specs
+        </button>
+        <button class="nav-tab" data-target="page-admin-dashboard">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2a4 4 0 00-4-4H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path>
+          </svg>
+          Admin Console
+        </button>
+        <button class="nav-tab" data-target="page-mobile-mockups">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+          </svg>
+          Mobile Screens
+        </button>
+        <button class="nav-tab" data-target="page-config-settings">
+          <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Policy Editor
+        </button>
+      </div>
+
+      <div class="nav-controls">
+        <button class="theme-btn" id="theme-toggle" title="Toggle Theme">
+          <svg id="moon-icon" style="width: 18px; height: 18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+          <svg id="sun-icon" style="width: 18px; height: 18px; display: none;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m2.828-9.9a5 5 0 117.072 0l-.707.707M16.243 16.243l.707.707M6.343 6.343l.707-.707"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Contents Area -->
+  <div class="page-wrapper">
+
+    <!-- PAGE 1: RULES, BUSINESS SPECS, AND TRACEABILITY MATRIX -->
+    <div id="page-rules" class="page-content active">
+      <div class="page-header">
+        <h2>Reward points system &mdash; Rule Book</h2>
+        <p>A catalog of policies governing Customer accounts, System Administration, and Marketing representative referrals.</p>
+      </div>
+
+      <div class="rules-grid">
+        
+        <!-- Customer Side -->
+        <div class="card rule-card client" data-ruleset="client">
+          <h3 class="card-title">
+            <svg style="width: 20px; height: 20px; color: var(--clr-client);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Customer Policies
+          </h3>
+          <ul>
+            <li>Gets a <strong class="cfg-val" data-config="creditPeriod">7</strong><strong>-day credit period</strong> from invoice date to pay.</li>
+            <li>Pays within <span class="cfg-val" data-config="creditPeriod">7</span> days &rarr; <strong>double reward points</strong> (2.00x multiplier).</li>
+            <li>Pays after <span class="cfg-val" data-config="creditPeriod">7</span> days &rarr; points <strong>gradually decrease</strong> with each delayed day.</li>
+            <li>Pays after <strong class="cfg-val" data-config="maxDays">30</strong> <strong>days</strong> &rarr; <strong>zero points</strong> awarded.</li>
+            <li>Buys <strong class="cfg-val" data-config="highSpend">₹2,00,000</strong><strong>+</strong> in a month &rarr; extra <strong>bonus points</strong>.</li>
+            <li>Buys above <span class="cfg-val" data-config="highSpend">₹2,00,000</span> again next month &rarr; additional <strong>loyalty bonus</strong>.</li>
+            <li>Buys every month consistently &rarr; <strong>regular customer bonus</strong>.</li>
+            <li>Buys above <span class="cfg-val" data-config="highSpend">₹2,00,000</span> &rarr; extra points scaled to purchase value.</li>
+            <li>Buys a Special Product or Old Stock item &rarr; <strong>automatic bonus points</strong> added on top of normal points (Special: +<span data-config="specialBonus">300</span> / Old Stock: +<span data-config="oldStockBonus">500</span>, stacking to +800 if both are on one invoice).</li>
+            <li>Referred by marketing rep &rarr; still gets all normal rewards, doubled if paid within <span class="cfg-val" data-config="creditPeriod">7</span> days.</li>
+          </ul>
+        </div>
+
+        <!-- Admin Control -->
+        <div class="card rule-card admin" data-ruleset="admin">
+          <h3 class="card-title">
+            <svg style="width: 20px; height: 20px; color: var(--clr-admin);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+            System Administrator Policies
+          </h3>
+          <ul>
+            <li>Designates products as <strong>Special Product</strong> or <strong>Old Stock</strong>.</li>
+            <li>Sets bonus point value per tagged product (e.g. Special Product = +<span data-config="specialBonus">300</span>, Old Stock = +<span data-config="oldStockBonus">500</span>).</li>
+            <li>System auto-scans every invoice for tagged items and applies the bonus automatically.</li>
+            <li>Bonuses from multiple tagged items on one invoice accumulate (e.g., Special + Old Stock = +800).</li>
+            <li>Owns core thresholds driving the engine: <span class="cfg-val" data-config="creditPeriod">7</span>-day credit, <span class="cfg-val" data-config="maxDays">30</span>-day cutoff, and <span class="cfg-val" data-config="highSpend">₹2,00,000</span> monthly limit.</li>
+          </ul>
+        </div>
+
+        <!-- Marketing Side -->
+        <div class="card rule-card marketing" data-ruleset="marketing">
+          <h3 class="card-title">
+            <svg style="width: 20px; height: 20px; color: var(--clr-marketing);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+            </svg>
+            Marketing Policies
+          </h3>
+          <ul>
+            <li>Rep earns commission on <strong>every purchase made through them</strong> (no minimum purchase requirement).</li>
+            <li>Rep earns <strong class="cfg-val" data-config="referralRate">1%</strong> <strong>of invoice value</strong> in reward points.</li>
+            <li>Onboarding a new shop &rarr; Rep receives a flat bonus of <strong class="cfg-val" data-config="shopOnboardBonus">1,000</strong> <strong>points</strong> upon successful customer verification. This is a one-time onboarding reward in addition to standard sales points.</li>
+            <li>Redemption Channels &rarr; Representatives can redeem their points balance directly for **cash transfers** (1 point = ₹1 bank transfer) or choose from premium catalog products (Bikes, Laptops, TVs, Phones).</li>
+            <li>Rep's points are credited <strong>only after successful invoice payment</strong> completed by the customer.</li>
+            <li>Customer on the referred invoice still gets full normal rewards independently (doubled if paid within <span class="cfg-val" data-config="creditPeriod">7</span> days).</li>
+          </ul>
+        </div>
+
+        <!-- Business Rules -->
+        <div class="card rule-card biz" data-ruleset="biz">
+          <h3 class="card-title">
+            <svg style="width: 20px; height: 20px; color: var(--clr-biz);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Core Business Rules (BR-01 to BR-14)
+          </h3>
+          <ul>
+            <li><strong>BR-01:</strong> Set <span class="cfg-val" data-config="creditPeriod">7</span>-day payment credit period.</li>
+            <li><strong>BR-02:</strong> Payment within <span class="cfg-val" data-config="creditPeriod">7</span> days doubles reward points.</li>
+            <li><strong>BR-03:</strong> Points decrease daily after day <span class="cfg-val" data-config="creditPeriod">7</span>.</li>
+            <li><strong>BR-04:</strong> Zero points after <span class="cfg-val" data-config="maxDays">30</span> days.</li>
+            <li><strong>BR-05:</strong> <span class="cfg-val" data-config="highSpend">₹2,00,000</span>+ monthly purchases earn bonus points.</li>
+            <li><strong>BR-06:</strong> Consecutive <span class="cfg-val" data-config="highSpend">₹2,00,000</span>+ monthly purchases earn loyalty bonus.</li>
+            <li><strong>BR-07:</strong> Monthly purchasing earns regular customer bonus.</li>
+            <li><strong>BR-08:</strong> Purchases over <span class="cfg-val" data-config="highSpend">₹2,00,000</span> earn additional value-based points.</li>
+            <li><strong>BR-09:</strong> Admin flags Special Product/Old Stock.</li>
+            <li><strong>BR-10:</strong> Product bonuses add to normal purchase points.</li>
+            <li><strong>BR-11:</strong> Multiple items in one invoice yield cumulative bonuses.</li>
+            <li><strong>BR-12:</strong> Representatives earn <span class="cfg-val" data-config="referralRate">1%</span> of invoice value for all purchases made through them (no minimum purchase required).</li>
+            <li><strong>BR-13:</strong> Representative points credit post-payment.</li>
+            <li><strong>BR-14:</strong> Customers earn points per standard payment rules.</li>
+            <li><strong>BR-15:</strong> Representatives receive a one-time flat bonus of <span class="cfg-val" data-config="shopOnboardBonus">1,000</span> points for onboarding a new shop customer.</li>
+          </ul>
+        </div>
+      </div>
+
+      
+    </div>
+
+    <!-- PAGE 2: LAPTOP DASHBOARD MOCKUP -->
+    <div id="page-admin-dashboard" class="page-content">
+      <div class="page-header">
+        <h2>Admin Portal &mdash; Reward points dashboard</h2>
+        <p>A laptop interface mockup displaying points issued, configuration states, and real-time transaction tables.</p>
+      </div>
+
+      <!-- laptop mockup -->
+      <div class="app">
+        <div class="mock-sidebar">
+          <div class="brand">Reward<span>Admin</span></div>
+          <div class="nav-item active"><div class="nic"></div>Dashboard</div>
+          <div class="nav-item"><div class="nic"></div>Product Tagging</div>
+          <div class="nav-item"><div class="nic"></div>Reward Rules</div>
+          <div class="nav-item"><div class="nic"></div>Audit Log</div>
+          <div class="nav-item"><div class="nic"></div>Marketing Reps</div>
+          <div class="nav-item"><div class="nic"></div>Reports</div>
+          <div class="nav-item"><div class="nic"></div>Settings</div>
+        </div>
+
+        <div class="main">
+          <div class="main-head">
+            <div><div class="title">Dashboard</div><div class="sub">Overview of points, invoices, and payouts</div></div>
+            <div class="admin-chip">● Config version 14 &mdash; active since 1 Jul 2026</div>
+          </div>
+
+          <div class="stat-grid">
+            <div class="stat-card"><div class="sl">Points issued (this month)</div><div class="sv">1,84,200</div><div class="sd">↑ 12% vs last month</div></div>
+            <div class="stat-card"><div class="sl">Marketing payouts pending</div><div class="sv">9,450 pts</div><div class="sd warn">6 invoices awaiting payment</div></div>
+            <div class="stat-card"><div class="sl">Tagged products active</div><div class="sv">23</div><div class="sd">14 Special &middot; 9 Old Stock</div></div>
+            <div class="stat-card"><div class="sl">Customers &ge; monthly threshold</div><div class="sv">47</div><div class="sd">of 312 active customers</div></div>
+          </div>
+
+          <div class="cols2">
+            <div class="panel">
+              <div class="panel-head"><div class="pt">Recent Invoices &amp; Point Breakdown</div><a href="#">View all &rarr;</a></div>
+              <table class="mock-table">
+                <tr><th>Invoice</th><th>Customer</th><th>Value</th><th>Tags</th><th>Points</th><th>Status</th></tr>
+                <tr><td>INV‑2247</td><td>Ganesh Traders</td><td>₹85,000</td><td>&mdash;</td><td>up to 1,700</td><td><span class="badge pending">Pending</span></td></tr>
+                <tr><td>INV‑2240</td><td>Kavya Retail</td><td>₹1,60,000</td><td><span class="badge tag">Special</span></td><td>2,400</td><td><span class="badge paid">Paid</span></td></tr>
+                <tr><td>INV‑2231</td><td>Lakshmi Textiles</td><td>₹1,20,000</td><td><span class="badge tag">Old Stock</span></td><td>3,900</td><td><span class="badge paid">Paid</span></td></tr>
+                <tr><td>INV‑2198</td><td>Sri Balaji Stores</td><td>₹75,000</td><td>&mdash;</td><td>640</td><td><span class="badge paid">Paid</span></td></tr>
+              </table>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><div class="pt">Active Reward Configuration</div><a href="#">Edit &rarr;</a></div>
+              <div class="cfg-row"><span class="cn">Payment credit period</span><span class="cv"><span data-config="creditPeriod">7</span> days</span></div>
+              <div class="cfg-row"><span class="cn">Zero-point cutoff</span><span class="cv"><span data-config="maxDays">30</span> days</span></div>
+              <div class="cfg-row"><span class="cn">Monthly bonus threshold</span><span class="cv">₹<span data-config="highSpend">2,00,000</span></span></div>
+              <div class="cfg-row"><span class="cn">Marketing referral minimum</span><span class="cv">None</span></div>
+              <div class="cfg-row"><span class="cn">Marketing reward rate</span><span class="cv" data-config="referralRate">1%</span></div>
+              <div class="cfg-row"><span class="cn">Product A (Special) bonus</span><span class="cv">+<span data-config="specialBonus">300</span> pts</span></div>
+              <div class="cfg-row"><span class="cn">Product B (Old Stock) bonus</span><span class="cv">+<span data-config="oldStockBonus">500</span> pts</span></div>
+              <div class="cfg-row"><span class="cn">Double points items</span><span class="cv" data-config="doubleProducts">Product X, Product Y</span></div>
+              <div class="cfg-row"><span class="cn">New shop onboard bonus</span><span class="cv">+<span data-config="shopOnboardBonus">1,000</span> pts</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="breakdown-wrap">
+        <div class="breakdown-title">What the Admin Side Controls</div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="fnum">01</div>
+            <div class="ftitle">Reward Rule Configuration</div>
+            <ul>
+              <li>Set the payment credit period (e.g., 7 days)</li>
+              <li>Set the zero-point cutoff window (e.g., 30 days)</li>
+              <li>Set the monthly high-purchase bonus threshold amount</li>
+              <li>Set marketing referral minimum invoice value and reward rate (1%)</li>
+              <li>Every setting is dynamic and configurable</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="fnum">02</div>
+            <div class="ftitle">Product Tagging</div>
+            <ul>
+              <li>Mark any inventory item as <b>Special Product</b> or <b>Old Stock</b></li>
+              <li>Designate specific products for <b>Double Points (2.0x multiplier)</b></li>
+              <li>Assign unique bonus point values per tagged item</li>
+              <li>System auto-scans invoices for tags with zero manual steps</li>
+              <li>Multiple tagged item bonuses accumulate additively</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="fnum">03</div>
+            <div class="ftitle">Config Versioning</div>
+            <ul>
+              <li>Save changes as new configurations with timestamped revisions</li>
+              <li>Historic invoices evaluate strictly against rules active at purchase time</li>
+              <li>Changes today never retroactively overwrite yesterday's point credits</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="fnum">04</div>
+            <div class="ftitle">Audit Log</div>
+            <ul>
+              <li>Complete ledger containing customer IDs, rule, timestamp, invoice</li>
+              <li>Filterable by rule types, customers, and invoice identifiers</li>
+              <li>Full historic traceability for point disputes and auditing</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="fnum">05</div>
+            <div class="ftitle">Marketing Rep Oversight</div>
+            <ul>
+              <li>Monitor representatives and the active invoices linked to them</li>
+              <li>Track pending vs. finalized commission credits (1% pool)</li>
+              <li>Approve and log one-time onboarding bonuses (+<span data-config="shopOnboardBonus">1,000</span> pts) for newly registered shops</li>
+              <li>Identify which invoices qualify vs. don't</li>
+            </ul>
+          </div>
+          <div class="feature-card">
+            <div class="fnum">06</div>
+            <div class="ftitle">Reports &amp; Monitoring</div>
+            <ul>
+              <li>Evaluate points issued by period, customer tiers, and product tags</li>
+              <li>Identify accounts approaching the high purchase spend limit</li>
+              <li>Consolidate commission payouts by representative and month</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3: MOBILE APPS GRID (CLIENT + MARKETING COLS) -->
+    <div id="page-mobile-mockups" class="page-content">
+      <div class="page-header">
+        <h2>Reward Points &mdash; App Mockups</h2>
+        <p>Interactive screens representing the client customer app and representative portal.</p>
+      </div>
+
+      <div class="phone-grid-container">
+        
+        <!-- ======================= CLIENT SIDE ======================= -->
+        <div class="group">
+          <div class="group-title client"><span class="dot"></span>Client Side &mdash; Customer App</div>
+          <div class="row">
+
+            <!-- CLIENT: HOME -->
+            <div class="col">
+              <div class="col-label">Home</div>
+              <div class="phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Good afternoon</div><div class="title">Arjun Ramesh</div></div>
+                  <div class="balance-card">
+                    <div class="label">Reward Points Balance</div>
+                    <div class="amount">18,420 pts</div>
+                    <div class="sub"><span>Lifetime earned: 24,900</span><span>Redeemed: 6,480</span></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Invoice #INV-2247 <span class="phone-chip urgent">4 days left</span></div>
+                    <div class="invoice-row">₹85,000 &middot; issued 3 days ago</div>
+                    <div class="progress-track"><div class="progress-fill day" style="width:43%"></div></div>
+                    <div class="fine">Pay within 4 days to lock in <b>double points</b> (1,700 pts).</div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Monthly Purchases <span class="phone-chip wait">₹55,000 to go</span></div>
+                    <div class="progress-track"><div class="progress-fill spend" style="width:72%"></div></div>
+                    <div class="fine">₹1,45,000 of ₹2,00,000 monthly threshold &mdash; cross the line to unlock the high‑purchase bonus.</div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Recent Activity</div>
+                    <div class="activity-item"><div><div class="meta">INV‑2231 &middot; Old Stock item</div><div class="desc">Auto bonus, paid day 2</div></div><div class="pts">+500</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2231 &middot; Base + 2x</div><div class="desc">Paid within credit period</div></div><div class="pts">+3,400</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2198 &middot; Late payment</div><div class="desc">Paid on day 19 &mdash; reduced rate</div></div><div class="pts neg">+640</div></div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab active"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Scan</div>
+                  <div class="tab"><div class="ic"></div>History</div>
+                  <div class="tab"><div class="ic"></div>Rewards</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Main landing dashboard showing current points totals.</li>
+                  <li>Open invoices highlight payment timings and double point multipliers.</li>
+                  <li>Volume trackers show how close they are to the monthly bonus tier.</li>
+                  <li>Recent feed details calculation multipliers applied to past invoices.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- CLIENT: SCAN QR CODE -->
+            <div class="col">
+              <div class="col-label">Scan QR Code</div>
+              <div class="phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen" style="padding: 0; background: #0c0e0c; color: #ffffff; min-height: 660px; position: relative;">
+                  <!-- Camera Viewfinder Mockup -->
+                  <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 24px 20px 90px 20px;">
+                    <div style="width: 100%; text-align: center; margin-top: 10px; z-index: 10;">
+                      <div style="color: rgba(255,255,255,0.7); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px;">Scanner</div>
+                      <div style="font-family: var(--serif); font-size: 22px; font-weight: 700; color: #ffffff; margin-top: 4px;">Scan Invoice QR</div>
+                    </div>
+
+                    <!-- Scanning Target Box -->
+                    <div style="width: 240px; height: 240px; position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                      <!-- Glowing brackets/corners using ledger green color -->
+                      <div style="position: absolute; top: 0; left: 0; width: 24px; height: 24px; border-top: 4px solid var(--ledger); border-left: 4px solid var(--ledger); border-top-left-radius: 12px;"></div>
+                      <div style="position: absolute; top: 0; right: 0; width: 24px; height: 24px; border-top: 4px solid var(--ledger); border-right: 4px solid var(--ledger); border-top-right-radius: 12px;"></div>
+                      <div style="position: absolute; bottom: 0; left: 0; width: 24px; height: 24px; border-bottom: 4px solid var(--ledger); border-left: 4px solid var(--ledger); border-bottom-left-radius: 12px;"></div>
+                      <div style="position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; border-bottom: 4px solid var(--ledger); border-right: 4px solid var(--ledger); border-bottom-right-radius: 12px;"></div>
+
+                      <!-- Scanning Laser Line Animation -->
+                      <div style="position: absolute; width: calc(100% - 10px); height: 3px; background: linear-gradient(90deg, transparent, #0b6e63, transparent); top: 12px; left: 5px; opacity: 0.85; border-radius: 20px; box-shadow: 0 0 10px #0b6e63; animation: scanLaser 2.2s linear infinite;"></div>
+
+                      <!-- QR Code Icon/Illustration -->
+                      <svg style="width: 140px; height: 140px; opacity: 0.55; color: #ffffff;" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 3h6v6H3V3zm2 2v2h2V5H5zm8-2h6v6h-6V3zm2 2v2h2V5h-2zM3 13h6v6H3v-6zm2 2v2h2v-2H5zm13-2h1v1h-1v-1zm-2 2h1v1h-1v-1zm2 1h1v1h-1v-1zm-4-3h2v2h-2v-2zm4 4h2v2h-2v-2zm-2 2h2v2h-2v-2zm-6-2h1v1h-1v-1zm1 2h1v1h-1v-1zm2-6h2v2h-2v-2zm2 2h1v1h-1v-1zm-3 2h2v1h-2v-1zm6-6h1v2h-1V7zm-1 9h1v1h-1v-1zm-1-3h1v1h-1v-1zm2 2h1v1h-1v-1zm-2 2h1v1h-1v-1z"></path>
+                      </svg>
+                    </div>
+
+                    <!-- Scan overlay feedback -->
+                    <div style="width: 100%; text-align: center; z-index: 10; background: rgba(16,20,16,0.85); padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); margin-top: 10px;">
+                      <div style="font-size: 11px; color: #0b6e63; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span style="width: 6px; height: 6px; border-radius: 50%; background: #0b6e63; display: inline-block; animation: scannerPulse 1s infinite alternate;"></span>
+                        QR Code Detected
+                      </div>
+                      <div style="font-size: 13px; font-weight: 600; color: #ffffff; margin-top: 4px;">INV-2247 &middot; Ramesh & Sons &middot; ₹85,000</div>
+                      <div style="font-size: 10.5px; color: rgba(255,255,255,0.6); margin-top: 2px;">Processing reward points validation...</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar" style="background: #11110f; border-top: 1px solid rgba(255,255,255,0.12);">
+                  <div class="tab" style="color: rgba(255,255,255,0.4);"><div class="ic" style="background: rgba(255,255,255,0.45);"></div>Home</div>
+                  <div class="tab active" style="color: var(--ledger);"><div class="ic" style="background: var(--ledger);"></div>Scan</div>
+                  <div class="tab" style="color: rgba(255,255,255,0.4);"><div class="ic" style="background: rgba(255,255,255,0.45);"></div>History</div>
+                  <div class="tab" style="color: rgba(255,255,255,0.4);"><div class="ic" style="background: rgba(255,255,255,0.45);"></div>Rewards</div>
+                  <div class="tab" style="color: rgba(255,255,255,0.4);"><div class="ic" style="background: rgba(255,255,255,0.45);"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Customer points are earned by scanning QR codes printed on invoices.</li>
+                  <li>Viewport scans the bill's invoice ID and instantly syncs transaction values.</li>
+                  <li>Saves manual entry and validates invoices automatically against the database.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- CLIENT: HISTORY -->
+            <div class="col">
+              <div class="col-label">History</div>
+              <div class="phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Your activity</div><div class="title">Points History</div></div>
+                  <div class="filter-row">
+                    <div class="filter-chip active">All</div>
+                    <div class="filter-chip">Earned</div>
+                    <div class="filter-chip">Bonuses</div>
+                    <div class="filter-chip">Late / Reduced</div>
+                    <div class="filter-chip">Redeemed</div>
+                  </div>
+
+                  <div class="month-label">July 2026</div>
+                  <div class="phone-card">
+                    <div class="activity-item"><div><div class="meta">INV‑2247 &middot; Pending</div><div class="desc">₹85,000 &middot; due in 4 days</div></div><div class="pts neg">&mdash;</div></div>
+                    <div class="activity-item"><div><div class="meta">Redeemed Cashback</div><div class="desc">Voucher #VOUCH-9812</div></div><div class="pts neg" style="color: var(--rose);">-2,500 pts</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2240 &middot; Special Product</div><div class="desc">Product A auto bonus</div></div><div class="pts">+300</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2240 &middot; Base + 2x</div><div class="desc">Paid on day 4</div></div><div class="pts">+2,100</div></div>
+                  </div>
+
+                  <div class="month-label">June 2026</div>
+                  <div class="phone-card">
+                    <div class="activity-item"><div><div class="meta">INV‑2231 &middot; Old Stock</div><div class="desc">Auto bonus</div></div><div class="pts">+500</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2231 &middot; Base + 2x</div><div class="desc">Paid on day 2</div></div><div class="pts">+3,400</div></div>
+                    <div class="activity-item"><div><div class="meta">Redeemed Gift Card</div><div class="desc">Amazon ₹1,500 Voucher</div></div><div class="pts neg" style="color: var(--rose);">-3,980 pts</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2214 &middot; High purchase</div><div class="desc">Monthly total crossed threshold</div></div><div class="pts">+1,000</div></div>
+                    <div class="activity-item"><div><div class="meta">INV‑2198 &middot; Late payment</div><div class="desc">Paid on day 19</div></div><div class="pts neg">+640</div></div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Scan</div>
+                  <div class="tab active"><div class="ic"></div>History</div>
+                  <div class="tab"><div class="ic"></div>Rewards</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Detailed ledgers of all point transactions grouped by month.</li>
+                  <li>Clear description tags indicating why points were added or reduced.</li>
+                  <li>Filters allowing sorting by standard base, bonuses, or penalties.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- CLIENT: REWARDS -->
+            <div class="col">
+              <div class="col-label">Rewards Rules</div>
+              <div class="phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Program overview</div><div class="title">How You Earn</div></div>
+                  <div class="tier-card">
+                    <div class="tname">Regular Customer</div>
+                    <div class="tsub">4 consecutive months above threshold &mdash; 2 more to unlock next tier</div>
+                  </div>
+
+                  <div class="phone-card">
+                    <div class="phone-card-title">Double Points Products <span class="phone-chip ok">2&times; Points</span></div>
+                    <div class="fine" style="margin-bottom: 8px;">Purchasing these tagged products awards double points (2.0x base bonus multiplier) on purchase:</div>
+                    <div class="fine" style="font-weight: 700; color: var(--ledger);"><span data-config="doubleProducts">Product X, Product Y</span></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Earning Rules</div>
+                    <div class="rule-item">
+                      <div class="rule-ic g">2&times;</div>
+                      <div class="rule-text"><div class="rt1">Pay within <span data-config="creditPeriod">7</span> days</div><div class="rt2">Double points on that invoice</div></div>
+                    </div>
+                    <div class="rule-item">
+                      <div class="rule-ic r">&darr;</div>
+                      <div class="rule-text"><div class="rt1">Pay after day <span data-config="creditPeriod">7</span></div><div class="rt2">Points reduce daily until day <span data-config="maxDays">30</span>, then zero</div></div>
+                    </div>
+                    <div class="rule-item">
+                      <div class="rule-ic a">₹</div>
+                      <div class="rule-text"><div class="rt1">Cross the monthly threshold</div><div class="rt2">Currently ₹<span data-config="highSpend">2,00,000</span> &mdash; earns extra bonus points</div></div>
+                    </div>
+                    <div class="rule-item">
+                      <div class="rule-ic g">&bigstar;</div>
+                      <div class="rule-text"><div class="rt1">2 consecutive qualifying months</div><div class="rt2">Additional loyalty bonus points</div></div>
+                    </div>
+                    <div class="rule-item">
+                      <div class="rule-ic a">&#9670;</div>
+                      <div class="rule-text"><div class="rt1">Special Product / Old Stock</div><div class="rt2">Flat bonus per tagged item, stacks per invoice</div></div>
+                    </div>
+                    <div class="rule-item">
+                      <div class="rule-ic g">2&times;</div>
+                      <div class="rule-text"><div class="rt1">Double Points Products</div><div class="rt2">Tagged items (<span data-config="doubleProducts">Product X, Product Y</span>) automatically receive a 2.0x points multiplier</div></div>
+                    </div>
+                  </div>
+
+                  <div class="phone-card">
+                    <div class="phone-card-title">Points Redemption Shop <span class="phone-chip wait">Catalog</span></div>
+                    <div class="fine" style="margin-bottom: 6px;">Redeem your accumulated points balance for high-value rewards:</div>
+                    
+                    <div class="rewards-shop-grid">
+                      <div class="shop-item">
+                        <div class="icon">🏍️</div>
+                        <div class="name">Sports Bike</div>
+                        <div class="cost">60,000 pts</div>
+                      </div>
+                      <div class="shop-item">
+                        <div class="icon">💻</div>
+                        <div class="name">Laptop (Pro)</div>
+                        <div class="cost">35,000 pts</div>
+                      </div>
+                      <div class="shop-item">
+                        <div class="icon">📺</div>
+                        <div class="name">Smart TV 4K</div>
+                        <div class="cost">25,000 pts</div>
+                      </div>
+                      <div class="shop-item">
+                        <div class="icon">📱</div>
+                        <div class="name">Flagship Phone</div>
+                        <div class="cost">20,000 pts</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Scan</div>
+                  <div class="tab"><div class="ic"></div>History</div>
+                  <div class="tab active"><div class="ic"></div>Rewards</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Plain-English layout of calculations guidelines and thresholds.</li>
+                  <li>Gamified status markers tracking loyalty consecutive runs.</li>
+                  <li>Auto-synchronized values mirroring the active Admin settings.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- CLIENT: PROFILE -->
+            <div class="col">
+              <div class="col-label">Profile</div>
+              <div class="phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="profile-head">
+                    <div class="avatar">AR</div>
+                    <div><div class="pname">Arjun Ramesh</div><div class="pmeta">Customer ID: CUS‑10432</div></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Account</div>
+                    <div class="list-item"><div class="li-label">Phone</div><div class="li-val">+91 98765 43210</div></div>
+                    <div class="list-item"><div class="li-label">Business Name</div><div class="li-val">Ramesh &amp; Sons</div></div>
+                    <div class="list-item"><div class="li-label">GSTIN</div><div class="li-val">33ABCDE1234F1Z5</div></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Preferences</div>
+                    <div class="list-item"><div class="li-label">Payment due reminders</div><div class="li-val">On</div></div>
+                    <div class="list-item"><div class="li-label">Points credited alerts</div><div class="li-val">On</div></div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Scan</div>
+                  <div class="tab"><div class="ic"></div>History</div>
+                  <div class="tab"><div class="ic"></div>Rewards</div>
+                  <div class="tab active"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Account metrics matching active invoice credentials.</li>
+                  <li>User setting nodes governing credit period text warnings.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ======================= MARKETING SIDE ======================= -->
+        <div class="group">
+          <div class="group-title marketing"><span class="dot"></span>Marketing Side &mdash; Representative App</div>
+          <div class="row">
+
+            <!-- MARKETING: HOME -->
+            <div class="col">
+              <div class="col-label">Home</div>
+              <div class="phone marketing-phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Welcome back</div><div class="title">Priya Menon</div></div>
+                  <div class="balance-card rose">
+                    <div class="label">Your Points (<span data-config="referralRate">1%</span> of Invoice)</div>
+                    <div class="amount">2,500 pts</div>
+                    <div class="fine" style="color:#fbeeec;opacity:.85;">pending &mdash; credits after customer pays</div>
+                    <div class="earn-grid">
+                      <div class="stat"><div class="n">6</div><div class="t">Linked Invoices</div></div>
+                      <div class="stat"><div class="n">₹4.1L</div><div class="t">Total Value</div></div>
+                    </div>
+                  </div>
+                  <div class="phone-card" style="background: linear-gradient(135deg, #1e1b4b 0%, #311042 100%); border: 1px solid #4a1d6d;">
+                    <div class="phone-card-title" style="color: #ffd700;">🏆 Gold Tier Representative <span class="phone-chip ok" style="background: rgba(255,215,0,0.15); color: #ffd700;">Rank #4</span></div>
+                    <div class="progress-track" style="background: #110e24; height: 6px;"><div class="progress-fill spend" style="width: 75%; background: linear-gradient(90deg, #8b5cf6, #ec4899);"></div></div>
+                    <div class="fine" style="color: #e2e8f0; margin-top: 6px; font-size: 10px; display: flex; justify-content: space-between;">
+                      <span>18,300 / 25,000 XP</span>
+                      <span style="color: #ffd700; font-weight: 700;">+6,700 XP to Platinum</span>
+                    </div>
+                    
+                    <div class="bonus-tags" style="margin-top: 10px;">
+                      <span class="phone-tag" style="background: rgba(236,72,153,0.15); color: #f472b6; font-size: 9px; padding: 2px 6px;">⚡ Onboard Streak x3</span>
+                      <span class="phone-tag" style="background: rgba(59,130,246,0.15); color: #60a5fa; font-size: 9px; padding: 2px 6px;">🎯 Target Master</span>
+                      <span class="phone-tag" style="background: rgba(16,185,129,0.15); color: #34d399; font-size: 9px; padding: 2px 6px;">👑 Kingmaker</span>
+                    </div>
+                  </div>
+
+                  <div class="cta-btn" style="background: var(--ledger); color: #fff;">+ Link New Invoice</div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Invoices Linked To You</div>
+                    <div class="ref-item">
+                      <div class="ref-top"><span class="cust">Ganesh Traders</span><span class="phone-status pending">Pending</span></div>
+                      <div class="ref-val">INV‑2247 &middot; ₹85,000 &middot; Day 3 of 7</div>
+                      <div class="split">
+                        <div class="split-box you"><div class="sl">You earn</div><div class="sv">850</div><div class="sd">1% of invoice</div></div>
+                        <div class="split-box cust"><div class="sl">Customer earns</div><div class="sv">Up to 1,700</div><div class="sd">Doubled if paid &le; 7 days</div></div>
+                      </div>
+                    </div>
+                    <div class="ref-item" style="border-top: 1px solid var(--line); margin-top: 10px; padding-top: 10px;">
+                      <div class="ref-top"><span class="cust">Balaji Supermarket</span><span class="phone-status paid" style="background:#e4f1ee; color:#0b6e63;">Onboarded</span></div>
+                      <div class="ref-val">New Shop Registration Bonus</div>
+                      <div class="split-box you" style="background:var(--rose-soft);"><div class="sl">You earned</div><div class="sv">+1,000</div><div class="sd">One-time registration credit</div></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab active m"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Invoices</div>
+                  <div class="tab"><div class="ic"></div>Earnings</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Separate displays mapping rep 1% metrics against customer rewards.</li>
+                  <li>Real-time pending warnings (points require paid invoices to clear).</li>
+                  <li>One-click shortcuts to associate invoices to rep credentials.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- MARKETING: INVOICES -->
+            <div class="col">
+              <div class="col-label">Invoices</div>
+              <div class="phone marketing-phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Invoices linked to you</div><div class="title">My Invoices</div></div>
+                  <div class="filter-row">
+                    <div class="filter-chip active m">All</div>
+                    <div class="filter-chip">Paid</div>
+                    <div class="filter-chip">Pending</div>
+                    <div class="filter-chip">Not qualified</div>
+                  </div>
+
+                  <div class="ref-item">
+                    <div class="ref-top"><span class="cust">Ganesh Traders</span><span class="phone-status pending">Pending</span></div>
+                    <div class="ref-val">INV‑2247 &middot; ₹85,000 &middot; Day 3 of 7</div>
+                    <div class="split">
+                      <div class="split-box you"><div class="sl">You earn</div><div class="sv">850</div><div class="sd">1% &middot; credits on pay</div></div>
+                      <div class="split-box cust"><div class="sl">Customer earns</div><div class="sv">Up to 1,700</div><div class="sd">Base, doubled if &le;7 days</div></div>
+                    </div>
+                  </div>
+
+                  <div class="ref-item">
+                    <div class="ref-top"><span class="cust">New Horizon Mart</span><span class="phone-status pending">Pending</span></div>
+                    <div class="ref-val">INV‑2255 &middot; ₹42,000 &middot; Day 1 of 7</div>
+                    <div class="split">
+                      <div class="split-box you"><div class="sl">You earn</div><div class="sv">420</div><div class="sd">1% of invoice</div></div>
+                      <div class="split-box cust"><div class="sl">Customer earns</div><div class="sv">Up to 840</div><div class="sd">Doubled if paid &le; 7 days</div></div>
+                    </div>
+                  </div>
+
+                  <div class="ref-item">
+                    <div class="ref-top"><span class="cust">Balaji Supermarket</span><span class="phone-status paid" style="background:#e4f1ee; color:#0b6e63;">Verified</span></div>
+                    <div class="ref-val">New Shop Registration Onboard</div>
+                    <div class="split-box you" style="background:var(--rose-soft);"><div class="sl">You earned</div><div class="sv">1,000</div><div class="sd">Onboard bonus credited</div></div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab active m"><div class="ic"></div>Invoices</div>
+                  <div class="tab"><div class="ic"></div>Earnings</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Listings showing the payout splits (rep's 1% vs. customer's points).</li>
+                  <li>Visual warnings for non-qualifying invoices (below the minimum config limit).</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- MARKETING: EARNINGS -->
+            <div class="col">
+              <div class="col-label">Earnings</div>
+              <div class="phone marketing-phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="screen-head"><div class="eyebrow">Overview</div><div class="title">Earnings</div></div>
+                  <div class="balance-card rose">
+                    <div class="label">Points Balance</div>
+                    <div class="amount">18,300 pts</div>
+                    <div class="sub"><span>Lifetime: 43,300</span><span>Redeemed: 25,000</span></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Last 6 Months</div>
+                    <div class="bar-chart">
+                      <div class="bwrap"><div class="bar" style="height:40%; background: var(--ledger);"></div><div class="blabel">Feb</div></div>
+                      <div class="bwrap"><div class="bar" style="height:55%; background: var(--ledger);"></div><div class="blabel">Mar</div></div>
+                      <div class="bwrap"><div class="bar" style="height:35%; background: var(--ledger);"></div><div class="blabel">Apr</div></div>
+                      <div class="bwrap"><div class="bar" style="height:70%; background: var(--ledger);"></div><div class="blabel">May</div></div>
+                      <div class="bwrap"><div class="bar" style="height:60%; background: var(--ledger);"></div><div class="blabel">Jun</div></div>
+                      <div class="bwrap"><div class="bar light" style="height:45%; background: var(--ledger-soft);"></div><div class="blabel">Jul</div></div>
+                    </div>
+                  </div>
+
+                  <div class="phone-card" style="background: rgba(23, 23, 43, 0.4); border-color: var(--line);">
+                    <div class="phone-card-title">Region Leaderboard <span class="phone-chip wait" style="background: rgba(255, 215, 0, 0.15); color: #ffd700;">July</span></div>
+                    <div style="font-size: 11px; display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                      <div style="display: flex; justify-content: space-between; padding: 4px 6px; border-radius: 6px; background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2);">
+                        <span>🥇 1. Rohan Mehta</span>
+                        <span style="font-weight: 700; color: #ffd700;">58,400 XP</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; padding: 4px 6px; border-radius: 6px;">
+                        <span>🥈 2. Sneha Sharma</span>
+                        <span style="font-weight: 700; color: #c0c0c0;">49,200 XP</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; padding: 4px 6px; border-radius: 6px;">
+                        <span>🥉 3. Vikram Sen</span>
+                        <span style="font-weight: 700; color: #cd7f32;">45,800 XP</span>
+                      </div>
+                      <div style="display: flex; justify-content: space-between; padding: 4px 6px; border-radius: 6px; background: rgba(139, 92, 246, 0.15); border-left: 3px solid #8b5cf6; font-weight: 600;">
+                        <span style="color: #a78bfa;">👉 4. Priya Menon (You)</span>
+                        <span style="font-weight: 700; color: #a78bfa;">43,300 XP</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Invoices</div>
+                  <div class="tab active m"><div class="ic"></div>Earnings</div>
+                  <div class="tab"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Isolated earnings trackers mapping commissions over time.</li>
+                  <li>Historic payouts listing exact invoice details.</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- MARKETING: PROFILE -->
+            <div class="col">
+              <div class="col-label">Profile</div>
+              <div class="phone marketing-phone">
+                <div class="statusbar"><span>9:41</span><span>●●●●  5G  ⌁</span></div>
+                <div class="screen">
+                  <div class="profile-head">
+                    <div class="avatar m">PM</div>
+                    <div><div class="pname">Priya Menon</div><div class="pmeta">Rep ID: MKT‑0087</div></div>
+                  </div>
+                  <div class="phone-card">
+                    <div class="phone-card-title">Performance</div>
+                    <div class="list-item"><div class="li-label">Linked invoices</div><div class="li-val">17</div></div>
+                    <div class="list-item"><div class="li-label">Conversion to paid</div><div class="li-val">86%</div></div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><div class="ic"></div>Home</div>
+                  <div class="tab"><div class="ic"></div>Invoices</div>
+                  <div class="tab"><div class="ic"></div>Earnings</div>
+                  <div class="tab active m"><div class="ic"></div>Profile</div>
+                </div>
+              </div>
+              <div class="meaning">
+                <div class="mtitle">Screen Logic Details</div>
+                <ul>
+                  <li>Representative key statistics including invoice conversion rates.</li>
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PAGE 4: CONFIGURATION CONTROLS (DYNAMIC SETTINGS) -->
+    <div id="page-config-settings" class="page-content">
+      <div class="page-header">
+        <h2>System Configuration Admin Panel</h2>
+        <p>Modify points configurations. Values propagate across all tabs, mockup dashboards, and rules text dynamically.</p>
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">
+          <svg style="width: 22px; height: 22px; color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+          Rewards Policy Variables
+        </h3>
+
+        <div class="config-grid">
+          
+          <div class="form-group">
+            <label for="cfg-creditPeriod">Credit Period (Days)</label>
+            <input type="number" id="cfg-creditPeriod" class="form-input" value="7" min="1" max="15">
+            <div class="config-desc">Days within which invoice payment receives a 2.0x points multiplier.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-maxDays">Forfeiture Cutoff (Days)</label>
+            <input type="number" id="cfg-maxDays" class="form-input" value="30" min="15" max="60">
+            <div class="config-desc">Days after which payment awards zero reward points.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-highSpend">High Purchase Spend (₹)</label>
+            <input type="number" id="cfg-highSpend" class="form-input" value="200000" min="50000" step="10000">
+            <div class="config-desc">Minimum monthly purchases to trigger loyalty/high spend bonuses.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-highSpendBonus">High Purchase Bonus (Pts)</label>
+            <input type="number" id="cfg-highSpendBonus" class="form-input" value="500" min="0" step="50">
+            <div class="config-desc">Flat bonus awarded for meeting the high purchase spend limit.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-loyaltyBonus">Loyalty Bonus (Pts)</label>
+            <input type="number" id="cfg-loyaltyBonus" class="form-input" value="250" min="0" step="50">
+            <div class="config-desc">Flat bonus points for consecutive qualifying high-purchase months.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-regularBonus">Regular Buyer Bonus (Pts)</label>
+            <input type="number" id="cfg-regularBonus" class="form-input" value="150" min="0" step="10">
+            <div class="config-desc">Bonus awarded consistently to monthly buyers.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-specialBonus">Special Product Bonus (Pts)</label>
+            <input type="number" id="cfg-specialBonus" class="form-input" value="300" min="0" step="50">
+            <div class="config-desc">Flat bonus points awarded for Special Product items on invoice.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-oldStockBonus">Old Stock Bonus (Pts)</label>
+            <input type="number" id="cfg-oldStockBonus" class="form-input" value="500" min="0" step="50">
+            <div class="config-desc">Flat bonus points awarded for Old Stock items on invoice.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-doubleProducts">Double Points Products</label>
+            <input type="text" id="cfg-doubleProducts" class="form-input" value="Product X, Product Y">
+            <div class="config-desc">Comma-separated list of products that award double points (2.0x base bonus) on purchase.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="cfg-shopOnboardBonus">New Shop Onboard Bonus (Pts)</label>
+            <input type="number" id="cfg-shopOnboardBonus" class="form-input" value="1000" min="0" step="100">
+            <div class="config-desc">Flat bonus reward points awarded to Sales Representatives for registering and onboarding a new shop.</div>
+          </div>
+
+
+
+          <div class="form-group">
+            <label for="cfg-referralRate">Referral Reward Rate (%)</label>
+            <input type="number" id="cfg-referralRate" class="form-input" value="1.0" min="0.1" max="5.0" step="0.1">
+            <div class="config-desc">Rate used to calculate representative points based on referred invoice total.</div>
+          </div>
+
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+          <button class="preset-btn" style="text-align: center; max-width: 150px; background: hsla(0,0%,50%,0.05);" onclick="resetConfigDefaults()">
+            Restore Defaults
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab switching controller
+    const tabs = document.querySelectorAll('.nav-tab');
+    const pages = document.querySelectorAll('.page-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const targetPage = tab.getAttribute('data-target');
+        
+        tabs.forEach(t => t.classList.remove('active'));
+        pages.forEach(p => p.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(targetPage).classList.add('active');
+      });
+    });
+
+    // Theme Selector controller
+    const themeBtn = document.getElementById('theme-toggle');
+    const moonIcon = document.getElementById('moon-icon');
+    const sunIcon = document.getElementById('sun-icon');
+    const htmlElement = document.documentElement;
+
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = htmlElement.getAttribute('data-theme');
+      if (currentTheme === 'dark') {
+        htmlElement.setAttribute('data-theme', 'light');
+        moonIcon.style.display = 'none';
+        sunIcon.style.display = 'block';
+      } else {
+        htmlElement.setAttribute('data-theme', 'dark');
+        moonIcon.style.display = 'block';
+        sunIcon.style.display = 'none';
+      }
+    });
+
+    // System configurations variables object
+    const systemConfig = {
+      creditPeriod: 7,
+      maxDays: 30,
+      baseRate: 0.01,
+      highSpend: 200000,
+      highSpendBonus: 500,
+      loyaltyBonus: 250,
+      regularBonus: 150,
+      specialBonus: 300,
+      oldStockBonus: 500,
+      
+      referralRate: 0.01,
+      doubleProducts: "Product X, Product Y"
+    };
+
+    // DOM Inputs Elements in Admin Panel
+    const cfgInputs = {
+      creditPeriod: document.getElementById('cfg-creditPeriod'),
+      maxDays: document.getElementById('cfg-maxDays'),
+      highSpend: document.getElementById('cfg-highSpend'),
+      highSpendBonus: document.getElementById('cfg-highSpendBonus'),
+      loyaltyBonus: document.getElementById('cfg-loyaltyBonus'),
+      regularBonus: document.getElementById('cfg-regularBonus'),
+      specialBonus: document.getElementById('cfg-specialBonus'),
+      oldStockBonus: document.getElementById('cfg-oldStockBonus'),
+      
+      referralRate: document.getElementById('cfg-referralRate'),
+      doubleProducts: document.getElementById('cfg-doubleProducts')
+    };
+
+    // Apply Admin configuration changes
+    function applyConfigChange(key, value) {
+      if (key === 'doubleProducts') {
+        systemConfig[key] = value;
+      } else if (key === 'referralRate') {
+        systemConfig[key] = parseFloat(value) / 100.0;
+      } else {
+        systemConfig[key] = parseFloat(value) || 0;
+      }
+      propagateUIConfigValues();
+    }
+
+    // Bind event listeners to config inputs in Admin Console
+    Object.keys(cfgInputs).forEach(key => {
+      cfgInputs[key].addEventListener('input', (e) => {
+        applyConfigChange(key, e.target.value);
+      });
+    });
+
+    // Populate all text labels matching variables
+    function propagateUIConfigValues() {
+      const targetSpans = document.querySelectorAll('[data-config]');
+      targetSpans.forEach(span => {
+        const key = span.getAttribute('data-config');
+        if (systemConfig.hasOwnProperty(key)) {
+          let val = systemConfig[key];
+          if (key === 'referralRate') {
+            val = (val * 100).toFixed(1) + '%';
+          } else if (key === 'highSpend') {
+            val = val.toLocaleString('en-IN');
+          }
+          span.textContent = val;
+        }
+      });
+    }
+
+    // Reset variables to standard default configuration
+    function resetConfigDefaults() {
+      cfgInputs.creditPeriod.value = 7;
+      cfgInputs.maxDays.value = 30;
+      cfgInputs.highSpend.value = 200000;
+      cfgInputs.highSpendBonus.value = 500;
+      cfgInputs.loyaltyBonus.value = 250;
+      cfgInputs.regularBonus.value = 150;
+      cfgInputs.specialBonus.value = 300;
+      cfgInputs.oldStockBonus.value = 500;
+      
+      cfgInputs.referralRate.value = 1.0;
+      cfgInputs.doubleProducts.value = "Product X, Product Y";
+
+      Object.keys(cfgInputs).forEach(key => {
+        applyConfigChange(key, cfgInputs[key].value);
+      });
+    }
+
+    // Initialize core engine
+    propagateUIConfigValues();
+  </script>
+</body>
+</html>
