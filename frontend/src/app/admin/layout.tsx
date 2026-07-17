@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Users, ShoppingCart, QrCode, Gift, Plane, BarChart3, Settings, LogOut, Bell, Search, Zap, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Users, BarChart3, Settings, LogOut, Bell, Search, Menu, X, FileText, Wallet, Award, Database, History, Tag, Sliders, Layers } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -34,13 +34,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Buyers', href: '/admin/buyers', icon: Users },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
-    { name: 'QR Codes', href: '/admin/qr', icon: QrCode },
-    { name: 'Campaigns', href: '/admin/campaigns', icon: Zap },
-    { name: 'Rewards', href: '/admin/rewards', icon: Gift },
-    { name: 'Trips', href: '/admin/trips', icon: Plane },
+    { name: 'Invoices', href: '/admin/invoices', icon: FileText },
+    { name: 'Redemptions', href: '/admin/redemptions', icon: Wallet },
+    { name: 'Marketing Reps', href: '/admin/reps', icon: Award },
+    { name: 'Imports', href: '/admin/imports', icon: Database },
+    { name: 'Audit Log', href: '/admin/audit', icon: History },
+    { name: 'Product Tagging', href: '/admin/products', icon: Tag },
     { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Reward Rule Configuration', href: '/admin/config', icon: Sliders },
+    { name: 'Configuration Versioning', href: '/admin/versions', icon: Layers },
   ];
 
   const handleLogout = () => {
@@ -119,17 +121,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search buyers, orders, or QR codes..." 
+              placeholder="Search buyers, invoices, or redemptions..." 
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
             />
           </div>
           
           {/* Right Actions (Hidden on tiny screens) */}
           <div className="hidden sm:flex items-center gap-4 md:gap-6 ml-auto">
-            <Link href="/admin/qr" className="hidden lg:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-              <QrCode className="w-4 h-4" />
-              Generate QR
-            </Link>
+
             
             <button className="relative text-slate-400 hover:text-slate-600 transition-colors">
               <Bell className="w-5 h-5" />

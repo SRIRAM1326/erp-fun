@@ -9,8 +9,18 @@ export default function ProfilePage() {
   const [referralCode, setReferralCode] = useState('');
   const [copied, setCopied] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [user, setUser] = useState<{ email?: string; name?: string; business_name?: string } | null>(null);
 
   useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        setUser(JSON.parse(userData));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
     const fetchProfile = async () => {
       try {
         const res = await api.get('/buyer/dashboard');
@@ -84,7 +94,7 @@ export default function ProfilePage() {
 
                 <div className="relative z-10">
                   <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">Business Name</p>
-                  <p className="text-white text-xl font-medium tracking-wide">Wholesale Traders Ltd</p>
+                  <p className="text-white text-xl font-medium tracking-wide">{user?.business_name || user?.name || 'Partner Store'}</p>
                   
                   <div className="flex gap-8 mt-4">
                     <div>
@@ -215,7 +225,7 @@ export default function ProfilePage() {
                   <Mail className="w-5 h-5 text-slate-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-slate-900 font-bold">buyer@example.com</p>
+                  <p className="text-sm text-slate-900 font-bold">{user?.email || 'partner@company.com'}</p>
                   <p className="text-xs font-medium text-slate-500">Primary Email</p>
                 </div>
               </div>

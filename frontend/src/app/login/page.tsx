@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Building2, ArrowRight, ShieldCheck, Mail, Lock, Award, ExternalLink } from 'lucide-react';
@@ -12,6 +12,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.role === 'admin') {
+          router.push('/admin');
+        } else if (user.role === 'rep') {
+          router.push('/rep');
+        } else {
+          router.push('/buyer');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +46,8 @@ export default function LoginPage() {
       
       if (user.role === 'admin') {
         router.push('/admin');
+      } else if (user.role === 'rep') {
+        router.push('/rep');
       } else {
         router.push('/buyer');
       }
@@ -168,7 +189,8 @@ export default function LoginPage() {
 
           <div className="mt-8 text-center text-xs font-semibold text-slate-400 space-y-1">
             <p>Admin Access: admin@example.com / admin123</p>
-            <p>Buyer Access: buyer@example.com / buyer123</p>
+            <p>Rep Access: mr.kiranm@sales.com / rep123</p>
+            <p>Buyer Access: j.j.electricalspudhur@example.com / buyer123</p>
           </div>
 
           <div className="mt-6 flex justify-center">

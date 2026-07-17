@@ -8,19 +8,33 @@ export default function AdminBuyersPage() {
   const [buyers, setBuyers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchBuyers = async () => {
+    try {
+      const res = await api.get('/admin/buyers');
+      setBuyers(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchBuyers = async () => {
-      try {
-        const res = await api.get('/admin/buyers');
-        setBuyers(res.data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchBuyers();
   }, []);
+
+  const handleVerifyBuyer = async (id: number) => {
+    if (!confirm('Verify this store? This will approve their loyalty account and award a flat +1,000 points onboarding bonus to their referring representative.')) {
+      return;
+    }
+    try {
+      await api.post(`/admin/buyers/${id}/verify`);
+      await fetchBuyers();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to verify buyer.');
+    }
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -113,15 +127,29 @@ export default function AdminBuyersPage() {
                       {(buyer.total_points || 0).toLocaleString()} pts
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        <span className="text-xs font-medium text-slate-600">Active</span>
-                      </span>
+                      {buyer.is_verified ? (
+                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span>Verified</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full text-xs font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                          <span>Pending</span>
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="p-1.5 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
+                      {!buyer.is_verified ? (
+                        <button
+                          onClick={() => handleVerifyBuyer(buyer.id)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-colors shadow-sm"
+                        >
+                          Verify Account
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-400 font-medium">No actions</span>
+                      )}
                     </td>
                   </tr>
                 ))

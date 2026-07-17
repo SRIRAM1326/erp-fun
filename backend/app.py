@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from config import Config
-from models import db, User, Campaign
+from models import db, User, Campaign, Invoice, Redemption, Configuration, Product
 from routes import api
 from werkzeug.security import generate_password_hash
 
@@ -24,45 +24,29 @@ def create_app(config_class=Config):
                 name='Admin User',
                 email='admin@example.com',
                 password_hash=generate_password_hash('admin123'),
-                role='admin'
+                role='admin',
+                is_verified=True,
+                verification_status='verified'
             )
             db.session.add(admin)
             
-            # Create a test buyer
-            buyer = User(
-                name='Test Buyer',
-                email='buyer@example.com',
-                password_hash=generate_password_hash('buyer123'),
-                role='buyer',
-                business_name='Test Store',
-                referral_code='REF-TESTSTORE'
+            # Create a default configuration (Version 1)
+            default_config = Configuration(
+                version=1,
+                credit_period=7,
+                forfeiture_cutoff=30,
+                high_spend_threshold=200000.0,
+                high_spend_bonus=500,
+                loyalty_bonus=250,
+                regular_bonus=150,
+                special_bonus=300,
+                old_stock_bonus=500,
+                referral_min_value=0.0,
+                referral_rate=0.01,
+                double_products="Product X, Product Y",
+                shop_onboard_bonus=1000
             )
-            db.session.add(buyer)
-            db.session.commit()
-            
-            # Create a referred buyer
-            buyer2 = User(
-                name='Second Buyer',
-                email='buyer2@example.com',
-                password_hash=generate_password_hash('buyer123'),
-                role='buyer',
-                business_name='Second Store',
-                referral_code='REF-SECOND',
-                referrer_id=buyer.id
-            )
-            db.session.add(buyer2)
-            
-            # Create a campaign
-            from datetime import datetime, timedelta
-            campaign = Campaign(
-                name='Double Points Weekend',
-                multiplier=2.0,
-                start_date=datetime.utcnow() - timedelta(days=1),
-                end_date=datetime.utcnow() + timedelta(days=2),
-                status='active'
-            )
-            db.session.add(campaign)
-            
+            db.session.add(default_config)
             db.session.commit()
             
     return app
