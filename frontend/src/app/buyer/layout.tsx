@@ -56,7 +56,7 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
       <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col shadow-xl z-20">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-2 mb-1">
-            <QrCode className="w-6 h-6 text-amber-400" />
+            <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
             <h1 className="text-xl font-bold tracking-tight">WholesaleRewards</h1>
           </div>
           <p className="text-xs text-slate-400 font-medium tracking-wider uppercase mt-2">Buyer Portal</p>
@@ -112,7 +112,7 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 z-20">
           <div className="flex items-center gap-2">
-            <QrCode className="w-5 h-5 text-slate-900" />
+            <img src="/erplogo.png" alt="Logo" className="h-6 w-auto object-contain" />
             <span className="font-bold text-slate-900">WholesaleRewards</span>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -mr-2 text-slate-600">

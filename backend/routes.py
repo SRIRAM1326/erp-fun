@@ -974,6 +974,8 @@ def admin_upload_products():
         item_idx = find_col_index(headers, ['item', 'productname', 'products', 'product'])
         tag_idx = find_col_index(headers, ['tag'])
         bonus_points_idx = find_col_index(headers, ['bonuspoints', 'points'])
+        category_idx = find_col_index(headers, ['category', 'brand'])
+        sales_rate_idx = find_col_index(headers, ['salesrate', 'rate'])
         
         if item_idx is None:
             return jsonify({'message': 'Required column "Item" not found in Excel sheet.'}), 400
@@ -982,8 +984,15 @@ def admin_upload_products():
         existing_products = {p.name: p for p in Product.query.all()}
         
         count = 0
+        current_group = "Default"
         for row in excel_rows[header_row_idx + 1:]:
             if all(cell is None for cell in row):
+                continue
+                
+            # Parse Group Name if present in first cell
+            first_cell = str(row[0] or "").strip()
+            if first_cell.lower().startswith('group name:'):
+                current_group = first_cell[len('group name:'):].strip()
                 continue
                 
             item_val = row[item_idx]
@@ -991,8 +1000,8 @@ def admin_upload_products():
                 continue
             name = str(item_val).strip()
             
-            # Skip empty rows, group names (e.g. Group Name: Appliances), and total summaries
-            if not name or name.lower().startswith('group name:') or name.lower() in ['item', 'total', 'grand total', 'subtotal']:
+            # Skip empty rows, total summaries
+            if not name or name.lower() in ['item', 'total', 'grand total', 'subtotal'] or name.lower().startswith('group name:'):
                 continue
                 
             tag = 'normal'
@@ -1014,18 +1023,50 @@ def admin_upload_products():
                     except:
                         bonus_points = 0
                         
+            brand_val = "Default"
+            if category_idx is not None and row[category_idx] is not None:
+                brand_val = str(row[category_idx]).strip()
+                if brand_val.lower() == 'none':
+                    brand_val = 'Default'
+                
+            sales_rate = 0.0
+            if sales_rate_idx is not None and row[sales_rate_idx] is not None:
+                sr_val = row[sales_rate_idx]
+                if isinstance(sr_val, (int, float)):
+                    sales_rate = float(sr_val)
+                else:
+                    try:
+                        sales_rate = float(str(sr_val).replace('₹', '').replace(',', '').strip())
+                    except:
+                        sales_rate = 0.0
+                        
             product = existing_products.get(name)
             if product:
                 product.tag = tag
                 product.bonus_points = bonus_points
+                product.category = current_group
+                product.brand = brand_val
+                if sales_rate > 0:
+                    product.sales_rate = sales_rate
             else:
-                product = Product(name=name, tag=tag, bonus_points=bonus_points)
+                product = Product(
+                    name=name, 
+                    tag=tag, 
+                    bonus_points=bonus_points,
+                    category=current_group,
+                    brand=brand_val,
+                    sales_rate=sales_rate
+                )
                 db.session.add(product)
                 existing_products[name] = product
                 
             count += 1
             
-        db.session.commit()
+            # Commit in batches of 50 to avoid Supabase statement timeout
+            if count % 50 == 0:
+                db.session.commit()
+            
+        db.session.commit()  # Final commit for remaining records
         return jsonify({'message': f'Successfully imported {count} products'}), 200
     except Exception as e:
         db.session.rollback()
@@ -1512,6 +1553,9 @@ def admin_get_products():
             'name': p.name,
             'tag': p.tag,
             'bonus_points': p.bonus_points,
+            'category': p.category or 'Default',
+            'brand': p.brand or 'Default',
+            'sales_rate': p.sales_rate,
             'invoices_this_month': invoices_this_month
         })
     
@@ -1528,6 +1572,8 @@ def admin_post_product():
     name = data.get('name', '').strip()
     tag = data.get('tag', 'normal').strip().lower()
     bonus_points = int(data.get('bonus_points', 0) or 0)
+    category = data.get('category', '').strip()
+    brand = data.get('brand', '').strip()
     
     if not name:
         return jsonify({'message': 'Product name is required'}), 400
@@ -1536,8 +1582,12 @@ def admin_post_product():
     if product:
         product.tag = tag
         product.bonus_points = bonus_points
+        if category:
+            product.category = category
+        if brand:
+            product.brand = brand
     else:
-        product = Product(name=name, tag=tag, bonus_points=bonus_points)
+        product = Product(name=name, tag=tag, bonus_points=bonus_points, category=category, brand=brand)
         db.session.add(product)
         
     db.session.commit()

@@ -71,9 +71,7 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-            <Building2 className="w-6 h-6 text-slate-900" />
-          </div>
+          <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
           <span className="text-2xl font-black text-white tracking-tight uppercase">B2B <span className="text-amber-400">Wholesale</span></span>
         </div>
 
@@ -118,9 +116,7 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="lg:hidden flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Building2 className="w-6 h-6 text-slate-900" />
-            </div>
+            <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
             <span className="text-2xl font-black text-slate-900 tracking-tight uppercase">B2B <span className="text-amber-500">Wholesale</span></span>
           </div>
 

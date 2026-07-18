@@ -100,6 +100,9 @@ class Product(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     tag = db.Column(db.String(50), default='normal') # 'normal', 'special', 'old_stock', 'double_points'
     bonus_points = db.Column(db.Integer, default=0)
+    category = db.Column(db.String(100), nullable=True)
+    brand = db.Column(db.String(100), nullable=True)
+    sales_rate = db.Column(db.Float, default=0.0)
 
 class Configuration(db.Model):
     id = db.Column(db.Integer, primary_key=True)

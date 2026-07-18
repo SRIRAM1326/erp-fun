@@ -54,9 +54,7 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex w-64 bg-[#14122d] border-r border-[#242247] flex-col shadow-xl z-20">
         <div className="p-6 border-b border-[#242247]">
           <div className="flex items-center gap-2 mb-1">
-            <div className="w-8 h-8 rounded-lg bg-[#8b5cf6] flex items-center justify-center text-white shadow-lg shadow-[#8b5cf6]/35">
-              <Award className="w-5 h-5" />
-            </div>
+            <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
             <h1 className="text-xl font-bold tracking-tight text-white">RewardHub<span className="text-[#8b5cf6]">™</span></h1>
           </div>
           <p className="text-xs text-[#8f8bb3] font-semibold tracking-wider uppercase mt-2">Representative Portal</p>
@@ -112,9 +110,7 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header */}
         <header className="md:hidden bg-[#14122d] border-b border-[#242247] h-16 flex items-center justify-between px-4 z-20">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-[#8b5cf6] flex items-center justify-center text-white">
-              <Award className="w-3.5 h-3.5" />
-            </div>
+            <img src="/erplogo.png" alt="Logo" className="h-6 w-auto object-contain" />
             <span className="font-bold text-white">RewardHub™</span>
           </div>
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -mr-2 text-[#8f8bb3]">

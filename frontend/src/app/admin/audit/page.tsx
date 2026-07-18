@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import {
   History, Search, Filter, RefreshCw, FileText,
   ArrowUpRight, ArrowDownRight, ChevronDown, ChevronUp,
-  Info, ShieldCheck, BookOpen, User
+  Info, ShieldCheck, BookOpen, User, Calendar, Clock
 } from 'lucide-react';
 
 const SOURCE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -29,11 +29,11 @@ function RuleBadge({ rule }: { rule: string }) {
   const code = match ? match[1] : null;
   const desc = code ? rule.replace(code, '').replace(/^\s*\(/, '').replace(/\)$/, '').trim() : rule;
   return (
-    <div className="inline-flex items-start gap-1.5 bg-slate-100 border border-slate-200 rounded-md px-2 py-1 text-[10px] leading-snug">
+    <div className="inline-flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-[10px] leading-normal shadow-sm">
       {code && (
-        <span className="font-mono font-bold text-blue-700 shrink-0">{code}</span>
+        <span className="font-mono font-black text-blue-700 shrink-0 bg-blue-50 px-1 py-0.5 rounded border border-blue-100">{code}</span>
       )}
-      <span className="text-slate-600 font-medium">{desc || rule}</span>
+      <span className="text-slate-700 font-semibold">{desc || rule}</span>
     </div>
   );
 }
@@ -46,46 +46,60 @@ function LogRow({ log }: { log: any }) {
   return (
     <>
       <tr
-        className={`hover:bg-slate-50/60 transition-colors cursor-pointer ${expanded ? 'bg-slate-50/40' : ''}`}
+        className={`hover:bg-slate-50/70 transition-colors cursor-pointer border-b border-slate-100 ${expanded ? 'bg-slate-50/50' : ''}`}
         onClick={() => setExpanded(!expanded)}
       >
         {/* Timestamp */}
-        <td className="px-5 py-3.5 text-xs text-slate-500 font-mono whitespace-nowrap">
-          <div>{new Date(log.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-          <div className="text-[10px] text-slate-400">{new Date(log.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+        <td className="px-5 py-4 text-xs text-slate-500 font-semibold font-mono whitespace-nowrap">
+          <div className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>{new Date(log.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
+            <span>{new Date(log.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
         </td>
 
         {/* Account */}
-        <td className="px-5 py-3.5">
-          <div className="flex items-center gap-2">
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${log.buyer_role === 'rep' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+        <td className="px-5 py-4">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 shadow-sm ${
+              log.buyer_role === 'rep' 
+                ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                : 'bg-blue-100 text-blue-700 border border-blue-200'
+            }`}>
               {log.buyer_name?.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-slate-900 font-semibold text-xs leading-none">{log.buyer_name}</p>
-              <p className="text-[10px] text-slate-400 font-normal mt-0.5">{log.buyer_email}</p>
+              <p className="text-slate-900 font-bold text-xs leading-none">{log.buyer_name}</p>
+              <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-none">{log.buyer_email}</p>
             </div>
           </div>
         </td>
 
         {/* Role */}
-        <td className="px-5 py-3.5">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${log.buyer_role === 'rep' ? 'text-purple-700 bg-purple-50 border-purple-100' : 'text-blue-700 bg-blue-50 border-blue-100'}`}>
+        <td className="px-5 py-4">
+          <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+            log.buyer_role === 'rep' 
+              ? 'text-purple-700 bg-purple-50 border-purple-100' 
+              : 'text-blue-700 bg-blue-50 border-blue-100'
+          }`}>
             {log.buyer_role === 'rep' ? 'Rep' : 'Buyer'}
           </span>
         </td>
 
         {/* Source */}
-        <td className="px-5 py-3.5">
-          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border capitalize ${src.bg} ${src.color}`}>
+        <td className="px-5 py-4">
+          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black border uppercase tracking-wider ${src.bg} ${src.color}`}>
             {src.label}
           </span>
         </td>
 
         {/* Invoice # */}
-        <td className="px-5 py-3.5 text-center">
+        <td className="px-5 py-4 text-center">
           {log.invoice_number ? (
-            <span className="inline-flex items-center gap-1 font-bold text-xs text-slate-800">
+            <span className="inline-flex items-center gap-1 font-bold text-xs text-slate-800 bg-slate-100 px-2 py-0.5 rounded-lg border">
               <FileText className="w-3 h-3 text-slate-400" /> {log.invoice_number}
             </span>
           ) : (
@@ -94,10 +108,10 @@ function LogRow({ log }: { log: any }) {
         </td>
 
         {/* Config Version */}
-        <td className="px-5 py-3.5 text-center">
+        <td className="px-5 py-4 text-center">
           {log.config_version ? (
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded">
-              v{log.config_version}
+            <span className="inline-flex items-center gap-0.5 text-[9px] font-mono font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-lg shadow-sm">
+              V{log.config_version}
             </span>
           ) : (
             <span className="text-slate-300 text-xs">—</span>
@@ -105,14 +119,14 @@ function LogRow({ log }: { log: any }) {
         </td>
 
         {/* Rules summary */}
-        <td className="px-5 py-3.5 max-w-[220px]">
+        <td className="px-5 py-4 max-w-[220px]">
           {rules.length > 0 ? (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-slate-600 font-medium truncate max-w-[160px]" title={rules[0]}>
+              <span className="text-[10px] text-slate-600 font-bold truncate max-w-[160px]" title={rules[0]}>
                 {rules[0]}
               </span>
               {rules.length > 1 && (
-                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-1 rounded shrink-0">
+                <span className="text-[9px] font-black text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded shrink-0">
                   +{rules.length - 1}
                 </span>
               )}
@@ -123,55 +137,56 @@ function LogRow({ log }: { log: any }) {
         </td>
 
         {/* Points Delta */}
-        <td className="px-5 py-3.5 text-right">
+        <td className="px-5 py-4 text-right">
           {log.type === 'credit' ? (
-            <span className="text-emerald-600 font-black text-sm inline-flex items-center gap-0.5">
+            <span className="text-emerald-600 font-black text-xs sm:text-sm inline-flex items-center gap-0.5 bg-emerald-50 px-2 py-1 rounded-xl border border-emerald-100">
               <ArrowUpRight className="w-3.5 h-3.5" /> +{log.points.toLocaleString()}
             </span>
           ) : (
-            <span className="text-rose-600 font-black text-sm inline-flex items-center gap-0.5">
+            <span className="text-rose-600 font-black text-xs sm:text-sm inline-flex items-center gap-0.5 bg-rose-50 px-2 py-1 rounded-xl border border-rose-100">
               <ArrowDownRight className="w-3.5 h-3.5" /> −{log.points.toLocaleString()}
             </span>
           )}
-          <p className="text-[10px] text-slate-400 font-normal">pts</p>
         </td>
 
         {/* Expand toggle */}
-        <td className="px-3 py-3.5 text-center">
+        <td className="px-3 py-4 text-center">
           {rules.length > 0 ? (
             expanded
-              ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
-              : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              ? <ChevronUp className="w-4 h-4 text-slate-400" />
+              : <ChevronDown className="w-4 h-4 text-slate-400" />
           ) : null}
         </td>
       </tr>
 
       {/* Expanded Rules Detail */}
       {expanded && (
-        <tr className="bg-blue-50/30">
-          <td colSpan={9} className="px-6 py-4 border-b border-blue-100">
-            <div className="flex items-start gap-3">
-              <div className="bg-blue-100 rounded-lg p-2 shrink-0 mt-0.5">
-                <BookOpen className="w-4 h-4 text-blue-700" />
+        <tr className="bg-slate-50/40">
+          <td colSpan={9} className="px-6 py-5 border-b border-slate-200">
+            <div className="flex items-start gap-4">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-2.5 shrink-0 mt-0.5 shadow-sm">
+                <BookOpen className="w-5 h-5 text-blue-700" />
               </div>
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold text-slate-900">Business Rules Applied</p>
+                  <p className="text-xs font-black text-slate-900 uppercase tracking-wide">Business Rules Applied</p>
                   {log.config_version && (
-                    <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-200 border border-slate-300 px-1.5 py-0.5 rounded">
+                    <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg shadow-sm">
                       Config Version {log.config_version}
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {rules.map((rule, i) => (
+                <div className="flex flex-wrap gap-2">
+                  {rules.map((rule: string, i: number) => (
                     <RuleBadge key={i} rule={rule} />
                   ))}
                 </div>
-                <p className="text-[10px] text-blue-700 font-medium flex items-center gap-1 mt-1">
-                  <Info className="w-3 h-3" />
-                  This explains why <strong>{log.buyer_name}</strong> received {log.type === 'credit' ? '+' : '−'}{log.points.toLocaleString()} points
-                  {log.invoice_number ? ` for invoice ${log.invoice_number}` : ''}.
+                <p className="text-xs text-blue-800 font-medium flex items-center gap-1.5 mt-2 bg-blue-50/50 p-2.5 border border-blue-100/50 rounded-xl max-w-3xl leading-relaxed">
+                  <Info className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>
+                    This transaction details the allocation rules applied for **{log.buyer_name}** resulting in a delta of **{log.type === 'credit' ? '+' : '−'}{log.points.toLocaleString()} points**
+                    {log.invoice_number ? ` generated against Invoice #${log.invoice_number}` : ''}.
+                  </span>
                 </p>
               </div>
             </div>
@@ -214,89 +229,94 @@ export default function AdminAuditLogs() {
   };
 
   // Client-side type filter
-  const filtered = typeFilter ? logs.filter((l) => l.type === typeFilter) : logs;
+  const filtered = typeFilter ? logs.filter((l: any) => l.type === typeFilter) : logs;
 
-  const creditCount = logs.filter((l) => l.type === 'credit').length;
-  const debitCount  = logs.filter((l) => l.type === 'debit').length;
-  const totalCreditPts = logs.filter((l) => l.type === 'credit').reduce((s, l) => s + l.points, 0);
-  const totalDebitPts  = logs.filter((l) => l.type === 'debit').reduce((s, l) => s + l.points, 0);
+  const creditCount = logs.filter((l: any) => l.type === 'credit').length;
+  const debitCount  = logs.filter((l: any) => l.type === 'debit').length;
+  const totalCreditPts = logs.filter((l: any) => l.type === 'credit').reduce((s: number, l: any) => s + l.points, 0);
+  const totalDebitPts  = logs.filter((l: any) => l.type === 'debit').reduce((s: number, l: any) => s + l.points, 0);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Audit Log</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Every reward point transaction — credited or withheld — along with the exact business rule and configuration version used to calculate it.
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+            <History className="w-6 h-6 text-yellow-500 animate-pulse" />
+            <span>Audit Log</span>
+          </h1>
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            Historical trace of points credits and redemptions mapped to business rules.
           </p>
         </div>
         <button
           onClick={fetchLogs}
-          className="bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm shrink-0"
+          className="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 shrink-0 self-stretch sm:self-auto text-center justify-center"
         >
-          <RefreshCw className="w-4 h-4" /> Refresh
+          <RefreshCw className="w-3.5 h-3.5" /> Refresh Audit Logs
         </button>
       </div>
 
       {/* Summary KPI strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Total Entries', value: logs.length, icon: History, color: 'text-slate-700', bg: 'bg-slate-100' },
-          { label: 'Credit Events', value: creditCount, sub: `+${totalCreditPts.toLocaleString()} pts`, icon: ArrowUpRight, color: 'text-emerald-700', bg: 'bg-emerald-50' },
-          { label: 'Debit Events', value: debitCount, sub: `−${totalDebitPts.toLocaleString()} pts`, icon: ArrowDownRight, color: 'text-rose-700', bg: 'bg-rose-50' },
-          { label: 'Net Points', value: (totalCreditPts - totalDebitPts).toLocaleString(), sub: 'across all accounts', icon: ShieldCheck, color: 'text-blue-700', bg: 'bg-blue-50' },
+          { label: 'Total Entries', value: logs.length, sub: 'Transactions tracked', icon: History, color: 'text-slate-700', bg: 'bg-slate-100 border-slate-200' },
+          { label: 'Credit Events', value: creditCount, sub: `+${totalCreditPts.toLocaleString()} pts credited`, icon: ArrowUpRight, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' },
+          { label: 'Debit Events', value: debitCount, sub: `−${totalDebitPts.toLocaleString()} pts claimed`, icon: ArrowDownRight, color: 'text-rose-700', bg: 'bg-rose-50 border-rose-100' },
+          { label: 'Net Circulation', value: (totalCreditPts - totalDebitPts).toLocaleString(), sub: 'Outstanding points balance', icon: ShieldCheck, color: 'text-blue-700', bg: 'bg-blue-50 border-blue-100' },
         ].map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-4 h-4 ${card.color}`} />
+            <div key={card.label} className="group bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-start gap-4">
+              <div className={`p-3 rounded-xl ${card.bg} border shrink-0 transition-transform group-hover:scale-110 duration-200`}>
+                <Icon className={`w-5 h-5 ${card.color}`} />
               </div>
-              <p className="text-xl font-bold text-slate-900">{card.value}</p>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">{card.label}</p>
-              {card.sub && <p className={`text-[10px] font-semibold mt-0.5 ${card.color}`}>{card.sub}</p>}
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1.5">{card.label}</p>
+                <p className="text-2xl font-black text-slate-900 leading-tight">{card.value.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-none truncate">{card.sub}</p>
+              </div>
             </div>
           );
         })}
       </div>
 
       {/* Info callout */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-3.5 flex items-start gap-3">
-        <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
-        <p className="text-xs text-blue-800 font-medium leading-relaxed">
-          Click any row to expand the <strong>business rules applied</strong> and the <strong>configuration version</strong> active at the time of the transaction. 
-          This lets you answer <em>"Why did this customer receive these points?"</em> without any additional investigation.
+      <div className="bg-blue-50/50 border border-blue-200 rounded-2xl px-5 py-4 flex items-start gap-3 shadow-sm">
+        <Info className="w-5 h-5 text-blue-600 mt-0.5 shrink-0 animate-bounce" />
+        <p className="text-xs text-blue-800 font-semibold leading-relaxed">
+          Expand any record below to investigate the **exact business rules** and **active rule configuration version** applied.
+          This enables immediate resolution of customer points audits.
         </p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col md:flex-row gap-3 items-center">
-        <form onSubmit={handleSearchSubmit} className="flex gap-2 w-full md:max-w-sm">
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2 w-full md:max-w-md shrink-0">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search name, email, invoice, rule…"
+              placeholder="Search buyer name, email, invoice..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
             />
           </div>
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-sm">
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all shadow-sm">
             Search
           </button>
         </form>
 
-        <div className="flex gap-2 ml-auto flex-wrap">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-            <Filter className="w-3.5 h-3.5" /> Filter:
+        <div className="flex gap-3 ml-auto flex-wrap w-full md:w-auto justify-end items-center">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+            <Filter className="w-4 h-4" /> Filters:
           </div>
           <select
             value={sourceFilter}
             onChange={(e) => setSourceFilter(e.target.value)}
-            className="border border-slate-200 rounded-lg text-xs px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-white"
+            className="border border-slate-200 rounded-xl text-xs px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-white text-slate-600 shadow-sm"
           >
             <option value="">All Sources</option>
             <option value="invoice_payment">Invoice Payments</option>
@@ -309,7 +329,7 @@ export default function AdminAuditLogs() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="border border-slate-200 rounded-lg text-xs px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold bg-white"
+            className="border border-slate-200 rounded-xl text-xs px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold bg-white text-slate-600 shadow-sm"
           >
             <option value="">Credit & Debit</option>
             <option value="credit">Credits Only</option>
@@ -323,10 +343,10 @@ export default function AdminAuditLogs() {
       )}
 
       {/* Log Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[11px] font-semibold uppercase tracking-wider">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-400 border-b border-slate-200 text-[10px] font-black uppercase tracking-wider">
               <tr>
                 <th className="px-5 py-3">Timestamp</th>
                 <th className="px-5 py-3">Account</th>
@@ -339,21 +359,22 @@ export default function AdminAuditLogs() {
                 <th className="px-5 py-3 w-8"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 font-medium">
+            <tbody className="divide-y divide-slate-100 font-bold">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-10 text-center text-slate-500">
-                    <RefreshCw className="w-4 h-4 animate-spin text-blue-600 inline mr-2" />Loading audit entries…
+                  <td colSpan={9} className="px-6 py-16 text-center text-slate-500">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <span className="text-xs text-slate-400 font-bold">Loading audit entries…</span>
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-10 text-center text-slate-400 italic">
+                  <td colSpan={9} className="px-6 py-16 text-center text-slate-400 italic font-medium">
                     No transactions matched your filter criteria.
                   </td>
                 </tr>
               ) : (
-                filtered.map((log) => <LogRow key={log.id} log={log} />)
+                filtered.map((log: any) => <LogRow key={log.id} log={log} />)
               )}
             </tbody>
           </table>
@@ -361,9 +382,9 @@ export default function AdminAuditLogs() {
 
         {/* Footer count */}
         {!loading && filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <p className="text-xs text-slate-500 font-medium">Showing <strong>{filtered.length}</strong> entries</p>
-            <p className="text-xs text-slate-400">Click any row to view the exact rules used for that transaction</p>
+          <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between font-semibold">
+            <p className="text-xs text-slate-500">Showing <strong>{filtered.length}</strong> transactions</p>
+            <p className="text-[10px] text-slate-400 italic">Click rows to view active configurations</p>
           </div>
         )}
       </div>

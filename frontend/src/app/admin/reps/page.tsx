@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import {
   Award, Users, FileText, Wallet, TrendingUp, X, CheckCircle2,
-  AlertTriangle, Phone, Mail, Plus, Edit2, PowerOff, Power,
-  Trash2, RefreshCw, ArrowUpRight, Store, ShoppingBag, BarChart3,
+  AlertTriangle, Phone, Plus, Edit2, PowerOff, Power,
+  Trash2, RefreshCw, ArrowUpRight, ShoppingBag, BarChart3,
   Clock, BadgeCheck, ChevronDown, ChevronUp
 } from 'lucide-react';
 
@@ -143,7 +143,7 @@ export default function AdminReps() {
         {[
           { label: 'Total Reps', value: summaryStats.total, icon: Award, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Active Reps', value: summaryStats.active, icon: BadgeCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Total Referral Sales', value: `₹${(summaryStats.totalSales / 100000).toFixed(1)}L`, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Total Sales', value: `₹${(summaryStats.totalSales / 100000).toFixed(1)}L`, icon: ShoppingBag, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'Credited Points', value: summaryStats.creditedPoints.toLocaleString(), icon: CheckCircle2, color: 'text-teal-600', bg: 'bg-teal-50' },
           { label: 'Pending Points', value: summaryStats.pendingPoints.toLocaleString(), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((card) => {
@@ -175,22 +175,19 @@ export default function AdminReps() {
               <tr>
                 <th className="px-5 py-3">Representative</th>
                 <th className="px-5 py-3">Contact</th>
-                <th className="px-5 py-3 text-center">New Shops</th>
                 <th className="px-5 py-3 text-center">Total Invoices</th>
-                <th className="px-5 py-3 text-center">Qualifying (≥ min)</th>
                 <th className="px-5 py-3 text-right">Total Sales</th>
                 <th className="px-5 py-3 text-right">Pending Points</th>
                 <th className="px-5 py-3 text-right">Credited Points</th>
-                <th className="px-5 py-3 text-center">Conversion</th>
                 <th className="px-5 py-3 text-center">Status</th>
                 <th className="px-5 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={11} className="px-6 py-10 text-center text-slate-500">Loading representatives...</td></tr>
+                <tr><td colSpan={8} className="px-6 py-10 text-center text-slate-500">Loading representatives...</td></tr>
               ) : reps.length === 0 ? (
-                <tr><td colSpan={11} className="px-6 py-10 text-center text-slate-500">No representatives registered. Click "Add Representative" to get started.</td></tr>
+                <tr><td colSpan={8} className="px-6 py-10 text-center text-slate-500">No representatives registered. Click "Add Representative" to get started.</td></tr>
               ) : (
                 reps.map((rep) => (
                   <>
@@ -206,28 +203,17 @@ export default function AdminReps() {
                           </div>
                           <div>
                             <p className="font-semibold text-slate-900 text-sm">{rep.name}</p>
-                            <p className="text-[10px] text-slate-400 font-mono">{rep.referral_code}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <p className="text-xs text-slate-600 flex items-center gap-1"><Mail className="w-3 h-3" /> {rep.email}</p>
-                        {rep.phone && <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5"><Phone className="w-3 h-3" /> {rep.phone}</p>}
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className="font-bold text-slate-900 flex items-center justify-center gap-1">
-                          <Store className="w-3.5 h-3.5 text-slate-400" /> {rep.new_shops}
-                        </span>
-                        <span className="text-[10px] text-slate-400">({rep.verified_buyers_count} verified)</span>
+                        <p className="text-xs text-slate-600 flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> {rep.phone || 'N/A'}
+                        </p>
                       </td>
                       <td className="px-5 py-4 text-center">
                         <span className="font-bold text-slate-900 flex items-center justify-center gap-1">
                           <FileText className="w-3.5 h-3.5 text-slate-400" /> {rep.total_invoices_count}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-bold px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" /> {rep.qualifying_invoices_count}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
@@ -238,19 +224,6 @@ export default function AdminReps() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <span className="text-emerald-600 font-bold text-xs">+{rep.credited_points.toLocaleString()} pts</span>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${rep.conversion_rate >= 70 ? 'bg-emerald-500' : rep.conversion_rate >= 40 ? 'bg-amber-400' : 'bg-rose-400'}`}
-                              style={{ width: `${Math.min(100, rep.conversion_rate)}%` }}
-                            />
-                          </div>
-                          <span className={`text-xs font-bold ${rep.conversion_rate >= 70 ? 'text-emerald-600' : rep.conversion_rate >= 40 ? 'text-amber-600' : 'text-rose-600'}`}>
-                            {rep.conversion_rate}%
-                          </span>
-                        </div>
                       </td>
                       <td className="px-5 py-4 text-center">
                         {rep.is_active ? (
@@ -296,30 +269,12 @@ export default function AdminReps() {
                         </div>
                       </td>
                     </tr>
-
+ 
                     {/* Expandable Invoice Oversight Panel */}
                     {selectedRep?.id === rep.id && (
                       <tr key={`${rep.id}-invoices`}>
-                        <td colSpan={11} className="px-0 py-0 bg-purple-50/30 border-b border-purple-100">
+                        <td colSpan={8} className="px-0 py-0 bg-purple-50/30 border-b border-purple-100">
                           <div className="p-5 space-y-4">
-
-                            {/* Rep Summary Strip */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                              {[
-                                { label: 'Total Referred Invoices', value: rep.total_invoices_count, color: 'text-slate-900' },
-                                { label: 'Qualifying (≥ min. purchase)', value: rep.qualifying_invoices_count, color: 'text-indigo-700' },
-                                { label: 'Pending Points', value: `${rep.pending_points.toLocaleString()} pts`, color: 'text-amber-700' },
-                                { label: 'Credited Points', value: `+${rep.credited_points.toLocaleString()} pts`, color: 'text-emerald-700' },
-                                { label: 'Total Referral Sales', value: `₹${rep.total_sales.toLocaleString()}`, color: 'text-purple-700' },
-                                { label: 'New Shops Registered', value: rep.new_shops, color: 'text-blue-700' },
-                                { label: 'Conversion Rate', value: `${rep.conversion_rate}%`, color: rep.conversion_rate >= 70 ? 'text-emerald-700' : rep.conversion_rate >= 40 ? 'text-amber-700' : 'text-rose-700' },
-                              ].map((stat) => (
-                                <div key={stat.label} className="bg-white rounded-lg border border-purple-100 px-3 py-2.5 shadow-sm">
-                                  <p className={`text-sm font-bold ${stat.color}`}>{stat.value}</p>
-                                  <p className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">{stat.label}</p>
-                                </div>
-                              ))}
-                            </div>
 
                             {/* Info note */}
                             <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 text-xs text-blue-800 font-medium">

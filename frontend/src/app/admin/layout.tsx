@@ -32,17 +32,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!user) return null;
 
   const navItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Buyers', href: '/admin/buyers', icon: Users },
-    { name: 'Invoices', href: '/admin/invoices', icon: FileText },
-    { name: 'Redemptions', href: '/admin/redemptions', icon: Wallet },
-    { name: 'Marketing Reps', href: '/admin/reps', icon: Award },
-    { name: 'Imports', href: '/admin/imports', icon: Database },
-    { name: 'Audit Log', href: '/admin/audit', icon: History },
-    { name: 'Product Tagging', href: '/admin/products', icon: Tag },
-    { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-    { name: 'Reward Rule Configuration', href: '/admin/config', icon: Sliders },
-    { name: 'Configuration Versioning', href: '/admin/versions', icon: Layers },
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, color: 'text-blue-400' },
+    { name: 'Buyers', href: '/admin/buyers', icon: Users, color: 'text-emerald-400' },
+    { name: 'Marketing Representatives', href: '/admin/reps', icon: Award, color: 'text-violet-400' },
+    { name: 'Invoices', href: '/admin/invoices', icon: FileText, color: 'text-amber-400' },
+    { name: 'Product Tagging', href: '/admin/products', icon: Tag, color: 'text-rose-400' },
+    { name: 'Redemptions', href: '/admin/redemptions', icon: Wallet, color: 'text-cyan-400' },
+    { name: 'Imports', href: '/admin/imports', icon: Database, color: 'text-indigo-400' },
+    { name: 'Reports', href: '/admin/reports', icon: BarChart3, color: 'text-teal-400' },
+    { name: 'Reward Rules', href: '/admin/config', icon: Sliders, color: 'text-orange-400' },
+    { name: 'Configuration Versioning', href: '/admin/versions', icon: Layers, color: 'text-pink-400' },
+    { name: 'Audit Log', href: '/admin/audit', icon: History, color: 'text-yellow-400' },
   ];
 
   const handleLogout = () => {
@@ -55,15 +55,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen bg-slate-50 font-sans overflow-hidden relative">
       
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-slate-900 text-white flex-col z-20">
+      <aside className="hidden md:flex w-64 bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-white flex-col z-20 border-r border-slate-800">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-2 mb-1">
-            <div className="bg-amber-400 p-1.5 rounded text-slate-900">
-              <BarChart3 className="w-5 h-5" />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight">WholesaleHQ</h1>
+            <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
           </div>
-          <p className="text-xs text-slate-400 uppercase tracking-widest mt-2 font-medium">Admin Portal</p>
+          <p className="text-[10px] text-indigo-300 font-bold uppercase tracking-widest mt-2 leading-none">Admin Portal</p>
         </div>
         
         <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto custom-scrollbar">
@@ -74,25 +71,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center space-x-3 px-4 py-2.5 rounded-lg transition-colors font-medium text-sm ${
+                className={`group flex items-center space-x-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${
                   isActive 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-slate-800/80 text-white border-l-4 border-blue-500 shadow-inner' 
+                    : 'text-slate-300 hover:bg-slate-800/40 hover:text-white'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-white scale-110' : item.color}`} />
                 <span>{item.name}</span>
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 bg-slate-950/20">
           <button 
             onClick={handleLogout}
-            className="flex items-center space-x-3 w-full px-4 py-2.5 text-slate-400 hover:bg-slate-800 hover:text-white rounded-lg transition-colors font-medium text-sm"
+            className="group flex items-center space-x-3 w-full px-4 py-2.5 text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-colors font-medium text-sm"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-4 h-4 shrink-0 text-slate-400 group-hover:text-red-400 group-hover:scale-110 transition-transform" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -106,10 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           
           {/* Mobile Header Branding & Menu Toggle */}
           <div className="md:hidden flex items-center gap-2">
-            <div className="bg-amber-400 p-1 rounded text-slate-900">
-              <BarChart3 className="w-4 h-4" />
-            </div>
-            <span className="font-bold text-slate-900">WholesaleHQ</span>
+            <img src="/erplogo.png" alt="Logo" className="h-6 w-auto object-contain" />
           </div>
 
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 -mr-2 text-slate-600">
@@ -140,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <p className="text-sm font-semibold text-slate-900 leading-none">Admin User</p>
                 <p className="text-xs text-slate-500 mt-1">Superadmin</p>
               </div>
-              <div className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md">
                 A
               </div>
             </div>
@@ -149,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Mobile Full Screen Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute inset-0 top-16 bg-white z-30 flex flex-col">
+          <div className="md:hidden absolute inset-0 top-16 bg-slate-950 z-30 flex flex-col border-t border-slate-800">
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -159,24 +153,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     key={item.name} 
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center space-x-4 px-4 py-4 rounded-xl font-medium ${
+                    className={`flex items-center space-x-4 px-4 py-3.5 rounded-xl font-medium ${
                       isActive 
-                        ? 'bg-blue-600 text-white' 
-                        : 'text-slate-600 hover:bg-slate-50'
+                        ? 'bg-slate-850 text-white border-l-4 border-blue-500' 
+                        : 'text-slate-300 hover:bg-slate-900'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : item.color}`} />
                     <span className="text-base">{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
-            <div className="p-4 border-t border-slate-100">
+            <div className="p-4 border-t border-slate-900">
               <button 
                 onClick={handleLogout}
-                className="flex items-center space-x-4 w-full px-4 py-4 text-red-600 font-medium"
+                className="flex items-center space-x-4 w-full px-4 py-4 text-red-400 font-medium"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5 text-red-400" />
                 <span>Sign Out</span>
               </button>
             </div>
