@@ -27,6 +27,9 @@ export default function AdminDashboard() {
     else setGreeting('Good evening');
 
     const fetchData = async () => {
+      if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+        return;
+      }
       try {
         const [buyersRes, analyticsRes, campaignsRes] = await Promise.all([
           api.get('/admin/buyers'),

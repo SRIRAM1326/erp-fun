@@ -10,7 +10,7 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
     db.init_app(app)
     jwt = JWTManager(app)
     
@@ -23,6 +23,11 @@ def create_app(config_class=Config):
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS invoice_reward_percentage FLOAT DEFAULT 0.50;"))
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_consecutive_months INTEGER DEFAULT 3;"))
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_min_monthly_purchase FLOAT DEFAULT 200000.0;"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS customer_code VARCHAR(100);"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS address VARCHAR(255) DEFAULT '0';"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT '0';"))
+            db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS state VARCHAR(100) DEFAULT '0';"))
+            db.session.execute(text("ALTER TABLE \"user\" ALTER COLUMN phone TYPE VARCHAR(100);"))
             db.session.commit()
         except Exception as e:
             db.session.rollback()

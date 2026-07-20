@@ -12,7 +12,11 @@ class User(db.Model):
     
     # Buyer specific fields
     business_name = db.Column(db.String(100))
-    phone = db.Column(db.String(20))
+    customer_code = db.Column(db.String(100), nullable=True)
+    phone = db.Column(db.String(100))
+    address = db.Column(db.String(255), default='0')
+    city = db.Column(db.String(100), default='0')
+    state = db.Column(db.String(100), default='0')
     total_points = db.Column(db.Integer, default=0)
     tier = db.Column(db.String(20), default='bronze')
     

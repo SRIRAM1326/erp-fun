@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, Fragment } from 'react';
 import { api } from '@/lib/api';
 import {
   Award, Users, FileText, Wallet, TrendingUp, X, CheckCircle2,
@@ -97,7 +97,7 @@ export default function AdminReps() {
       await api.patch(`/admin/reps/${rep.id}`, { is_active: !rep.is_active });
       fetchReps();
       if (selectedRep?.id === rep.id) setSelectedRep({ ...selectedRep, is_active: !rep.is_active });
-    } catch (err) { console.error(err); }
+    } catch (err: any) { console.error(err); }
   };
 
   const handleDelete = async (rep: any, e: React.MouseEvent) => {
@@ -107,7 +107,7 @@ export default function AdminReps() {
       await api.delete(`/admin/reps/${rep.id}`);
       if (selectedRep?.id === rep.id) { setSelectedRep(null); setRepInvoices([]); }
       fetchReps();
-    } catch (err) { console.error(err); }
+    } catch (err: any) { console.error(err); }
   };
 
   useEffect(() => { fetchReps(); }, []);
@@ -210,7 +210,7 @@ export default function AdminReps() {
                 <tr><td colSpan={8} className="px-6 py-10 text-center text-slate-500">No representatives registered. Click "Add Representative" to get started.</td></tr>
               ) : (
                 reps.map((rep) => (
-                  <>
+                  <Fragment key={rep.id}>
                     <tr
                       key={rep.id}
                       onClick={() => handleSelectRep(rep)}
@@ -384,7 +384,7 @@ export default function AdminReps() {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 ))
               )}
             </tbody>

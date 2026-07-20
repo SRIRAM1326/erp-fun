@@ -168,12 +168,12 @@ export default function AdminProductsPage() {
     );
   };
 
-  const ProductCard = ({ product }: { product: any }) => {
+  const renderProductCard = (product: any) => {
     const tag = getTag(product.tag);
     const TagIcon = tag.icon;
     const isBonus = product.tag !== 'normal';
     return (
-      <div className={`bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 ${
+      <div key={product.id} className={`bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 ${
         isBonus ? 'border-l-4 ' + (
           product.tag === 'special'       ? 'border-l-blue-500' :
           product.tag === 'old_stock'     ? 'border-l-amber-500' :
@@ -229,7 +229,7 @@ export default function AdminProductsPage() {
     );
   };
 
-  const GroupView = ({ groups, label }: { groups: [string, any[]][], label: string }) => (
+  const renderGroupView = (groups: [string, any[]][], label: string) => (
     <div className="space-y-3">
       {groups.map(([groupName, groupProducts]) => {
         const isExpanded = expandedGroups.has(groupName);
@@ -276,7 +276,7 @@ export default function AdminProductsPage() {
             {isExpanded && (
               <div className="border-t border-slate-100 p-4 bg-slate-50/50">
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                  {groupProducts.map(p => <ProductCard key={p.id} product={p} />)}
+                  {groupProducts.map(p => renderProductCard(p))}
                 </div>
               </div>
             )}
@@ -286,7 +286,7 @@ export default function AdminProductsPage() {
     </div>
   );
 
-  const SalesView = () => {
+  const renderSalesView = () => {
     const topSellers = sortedBySales.filter(p => p.invoices_this_month > 0);
     const noSales = sortedBySales.filter(p => !p.invoices_this_month);
     return (
@@ -491,7 +491,7 @@ export default function AdminProductsPage() {
       ) : (
         <>
           {/* SALES VIEW */}
-          {viewMode === 'sales' && <SalesView />}
+          {viewMode === 'sales' && renderSalesView()}
 
           {/* BRANDWISE VIEW */}
           {viewMode === 'brandwise' && (
@@ -510,7 +510,7 @@ export default function AdminProductsPage() {
                   >Collapse All</button>
                 </div>
               </div>
-              <GroupView groups={groupedByBrand} label="Brand" />
+              {renderGroupView(groupedByBrand, "Brand")}
             </div>
           )}
 
@@ -531,7 +531,7 @@ export default function AdminProductsPage() {
                   >Collapse All</button>
                 </div>
               </div>
-              <GroupView groups={groupedByCategory} label="Category" />
+              {renderGroupView(groupedByCategory, "Category")}
             </div>
           )}
 
@@ -540,7 +540,7 @@ export default function AdminProductsPage() {
             <div className="space-y-4">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {paginatedFlat.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                  renderProductCard(product)
                 ))}
               </div>
               {totalPages > 1 && (
@@ -671,13 +671,13 @@ export default function AdminProductsPage() {
                     />
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">pts</span>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Added flat to buyer's total on every invoice containing this product.</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Added flat to buyer&apos;s total on every invoice containing this product.</p>
                 </div>
               )}
 
               {formData.tag === 'double_points' && (
                 <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-3 text-xs text-purple-800 font-medium">
-                  <strong>Double Points</strong> applies a 2× multiplier to the buyer's base points calculation for that invoice.
+                  <strong>Double Points</strong> applies a 2× multiplier to the buyer&apos;s base points calculation for that invoice.
                 </div>
               )}
 

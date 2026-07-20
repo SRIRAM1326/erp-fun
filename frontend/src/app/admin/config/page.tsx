@@ -459,7 +459,7 @@ export default function AdminRewardConfigPage() {
                 {activeTab === 1 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
-                      Simulate a buyer\'s monthly cumulative purchase spend to see threshold milestone qualification.
+                      Simulate a buyer&apos;s monthly cumulative purchase spend to see threshold milestone qualification.
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between font-mono font-bold">
@@ -543,7 +543,7 @@ export default function AdminRewardConfigPage() {
                 {activeTab === 2 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
-                      Slide to simulate a buyer's average monthly purchase spend across consecutive months.
+                      Slide to simulate a buyer&apos;s average monthly purchase spend across consecutive months.
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between font-mono font-bold">

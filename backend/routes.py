@@ -112,6 +112,11 @@ def get_buyers():
         'name': b.name,
         'email': b.email,
         'business_name': b.business_name,
+        'customer_code': b.customer_code or '0',
+        'phone': b.phone or '0',
+        'address': b.address or '0',
+        'city': b.city or '0',
+        'state': b.state or '0',
         'total_points': b.total_points,
         'tier': b.tier,
         'referral_code': b.referral_code,
@@ -291,6 +296,87 @@ def get_chart_data():
         {"name": "Jul", "issued": 3490, "redeemed": 4300},
     ]
     return jsonify(data), 200
+
+@api.route('/admin/reports/analytics', methods=['GET'])
+@jwt_required()
+def get_analytics_report():
+    current_user = get_jwt()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    # Liability
+    total_points = db.session.query(func.sum(User.total_points)).filter(User.role == 'buyer').scalar() or 0
+    financial_liability = total_points * 0.10
+
+    # Chart data
+    chart_data = [
+        {"name": "2026-03", "issued": 4000, "redeemed": 1200},
+        {"name": "2026-04", "issued": 6500, "redeemed": 2500},
+        {"name": "2026-05", "issued": 8000, "redeemed": 3200},
+        {"name": "2026-06", "issued": 10500, "redeemed": 4100},
+        {"name": "2026-07", "issued": 14000, "redeemed": 5800},
+    ]
+
+    # Top buyers
+    top_buyers_db = User.query.filter_by(role='buyer').order_by(User.total_points.desc()).limit(5).all()
+    top_buyers = [{
+        'id': b.id,
+        'name': b.business_name or b.name,
+        'total_points': b.total_points,
+        'tier': b.tier or 'Silver'
+    } for b in top_buyers_db]
+
+    # Approaching customers (monthly spend threshold)
+    latest_config = Configuration.query.order_by(Configuration.version.desc()).first()
+    threshold = latest_config.high_spend_threshold if latest_config else 200000.0
+
+    buyers = User.query.filter_by(role='buyer').limit(10).all()
+    approaching_customers = []
+    for b in buyers:
+        now = datetime.utcnow()
+        month_start = datetime(now.year, now.month, 1)
+        monthly_spend = db.session.query(func.sum(Invoice.amount)).filter(
+            Invoice.buyer_id == b.id,
+            Invoice.status == 'paid',
+            Invoice.created_at >= month_start
+        ).scalar() or 0.0
+
+        percentage = min(100.0, (monthly_spend / threshold * 100.0)) if threshold > 0 else 0.0
+        approaching_customers.append({
+            'id': b.id,
+            'name': b.business_name or b.name,
+            'email': b.email,
+            'monthly_spend': monthly_spend,
+            'threshold': threshold,
+            'percentage': round(percentage, 1)
+        })
+
+    # Payout summaries (reps)
+    reps = User.query.filter_by(role='rep').all()
+    payout_summaries = []
+    current_month_str = datetime.utcnow().strftime('%Y-%m')
+    for r in reps:
+        paid_invoices = Invoice.query.filter_by(rep_id=r.id, status='paid').all()
+        credited_points = sum(inv.points_rep for inv in paid_invoices)
+        if credited_points > 0:
+            payout_summaries.append({
+                'rep_name': r.name,
+                'month': current_month_str,
+                'commission_points': credited_points,
+                'amount_rupees': credited_points
+            })
+
+    return jsonify({
+        'liability': {
+            'total_unredeemed_points': total_points,
+            'financial_liability': financial_liability,
+            'currency': 'INR'
+        },
+        'chart_data': chart_data,
+        'top_buyers': top_buyers,
+        'approaching_customers': approaching_customers,
+        'payout_summaries': payout_summaries
+    }), 200
 
 @api.route('/admin/campaigns', methods=['GET'])
 @jwt_required()
@@ -931,6 +1017,33 @@ def excel_to_dicts(file_storage):
         dicts.append(row_dict)
     return dicts
 
+def read_uploaded_file_rows(file):
+    """
+    Reads an uploaded file (.xlsx, .xls, .xlsm, .csv) into a list of tuples/lists.
+    Supports fallback to CSV text parsing if openpyxl fails.
+    """
+    filename = (file.filename or '').lower()
+    file_bytes = file.read()
+    
+    if filename.endswith('.csv'):
+        import csv
+        text_content = file_bytes.decode('utf-8', errors='ignore')
+        reader = csv.reader(text_content.splitlines())
+        return [list(row) for row in reader if any(str(c).strip() for c in row)]
+    else:
+        try:
+            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+            sheet = wb.active
+            return list(sheet.iter_rows(values_only=True))
+        except Exception:
+            import csv
+            text_content = file_bytes.decode('utf-8', errors='ignore')
+            reader = csv.reader(text_content.splitlines())
+            rows = [list(row) for row in reader if any(str(c).strip() for c in row)]
+            if len(rows) > 0:
+                return rows
+            raise Exception("Unable to parse file. Please provide a valid Excel (.xlsx, .xls) or CSV file.")
+
 @api.route('/admin/upload/products', methods=['POST'])
 @jwt_required()
 def admin_upload_products():
@@ -942,79 +1055,80 @@ def admin_upload_products():
         return jsonify({'message': 'No file uploaded'}), 400
         
     file = request.files['file']
-    if not file.filename.endswith('.xlsx'):
-        return jsonify({'message': 'Only Excel files (.xlsx) are supported'}), 400
+    filename = (file.filename or '').lower()
+    if not filename.endswith(('.xlsx', '.xls', '.xlsm', '.csv')):
+        return jsonify({'message': 'Only Excel files (.xlsx, .xls) or CSV files are supported'}), 400
         
     try:
-        file_bytes = file.read()
-        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
-        sheet = wb.active
-        excel_rows = list(sheet.iter_rows(values_only=True))
-        if not excel_rows or len(excel_rows) < 2:
+        excel_rows = read_uploaded_file_rows(file)
+        if not excel_rows or len(excel_rows) < 1:
             return jsonify({'message': 'Excel sheet is empty or has no data rows'}), 400
-            
-        # Find header row index by scanning first 15 rows
-        header_row_idx = -1
-        for idx, row in enumerate(excel_rows[:15]):
-            row_str = [str(c).lower().strip() for c in row if c is not None]
-            if 'item' in row_str and ('code' in row_str or 'unit' in row_str):
-                header_row_idx = idx
-                break
-                
-        if header_row_idx == -1:
-            return jsonify({'message': 'Header row containing "Item" and "Code" or "Unit" not found.'}), 400
-            
-        headers = [str(cell).strip() if cell is not None else "" for cell in excel_rows[header_row_idx]]
+
+        header_keywords = ['product', 'item', 'code', 'name', 'tag', 'bonus', 'rate', 'category', 'unit', 'brand', 'price']
+        best_header_idx = 0
+        max_matches = -1
         
+        for idx, row in enumerate(excel_rows[:25]):
+            if not row or all(c is None or str(c).strip() == "" for c in row):
+                continue
+            row_str = ' '.join(str(c).lower().strip() for c in row if c is not None)
+            matches = sum(1 for kw in header_keywords if kw in row_str)
+            if matches > max_matches:
+                max_matches = matches
+                best_header_idx = idx
+                
+        header_row_idx = best_header_idx
+
+        headers = [str(cell).strip() if cell is not None else "" for cell in excel_rows[header_row_idx]]
+
         def find_col_index(headers, keywords):
             for idx, header in enumerate(headers):
-                h_clean = header.lower().replace(' ', '').replace('(', '').replace(')', '').replace('₹', '')
+                h_clean = header.lower().replace(' ', '').replace('(', '').replace(')', '').replace('₹', '').replace('_', '')
                 for keyword in keywords:
                     if keyword in h_clean:
                         return idx
             return None
 
-        item_idx = find_col_index(headers, ['item', 'productname', 'products', 'product'])
-        tag_idx = find_col_index(headers, ['tag'])
-        bonus_points_idx = find_col_index(headers, ['bonuspoints', 'points'])
-        category_idx = find_col_index(headers, ['category', 'brand'])
-        sales_rate_idx = find_col_index(headers, ['salesrate', 'rate'])
-        
+        item_idx = find_col_index(headers, ['item', 'productname', 'products', 'product', 'name', 'code', 'description', 'title'])
         if item_idx is None:
-            return jsonify({'message': 'Required column "Item" not found in Excel sheet.'}), 400
-            
-        # Fetch all existing products first to avoid N+1 queries
+            item_idx = 0
+
+        tag_idx = find_col_index(headers, ['tag', 'type', 'status'])
+        bonus_points_idx = find_col_index(headers, ['bonuspoints', 'bonus', 'points', 'reward'])
+        category_idx = find_col_index(headers, ['category', 'group', 'brand'])
+        sales_rate_idx = find_col_index(headers, ['salesrate', 'rate', 'price', 'amount'])
+
         existing_products = {p.name: p for p in Product.query.all()}
-        
         count = 0
         current_group = "Default"
+
         for row in excel_rows[header_row_idx + 1:]:
-            if all(cell is None for cell in row):
+            if all(cell is None or str(cell).strip() == "" for cell in row):
                 continue
-                
-            # Parse Group Name if present in first cell
+
             first_cell = str(row[0] or "").strip()
             if first_cell.lower().startswith('group name:'):
                 current_group = first_cell[len('group name:'):].strip()
                 continue
-                
+
+            if item_idx >= len(row):
+                continue
             item_val = row[item_idx]
             if item_val is None:
                 continue
-            name = str(item_val).strip()
-            
-            # Skip empty rows, total summaries
-            if not name or name.lower() in ['item', 'total', 'grand total', 'subtotal'] or name.lower().startswith('group name:'):
+            name = str(item_val).strip()[:100]
+
+            if not name or name.lower() in ['item', 'product', 'product name', 'product_name', 'name', 'total', 'grand total', 'subtotal'] or name.lower().startswith('group name:'):
                 continue
-                
+
             tag = 'normal'
-            if tag_idx is not None and row[tag_idx] is not None:
+            if tag_idx is not None and tag_idx < len(row) and row[tag_idx] is not None:
                 tag_val = str(row[tag_idx]).strip().lower()
                 if tag_val in ['normal', 'special', 'old_stock', 'double_points']:
                     tag = tag_val
-                    
+
             bonus_points = 0
-            if bonus_points_idx is not None and row[bonus_points_idx] is not None:
+            if bonus_points_idx is not None and bonus_points_idx < len(row) and row[bonus_points_idx] is not None:
                 bp_val = row[bonus_points_idx]
                 if isinstance(bp_val, int):
                     bonus_points = bp_val
@@ -1022,18 +1136,18 @@ def admin_upload_products():
                     bonus_points = int(bp_val)
                 else:
                     try:
-                        bonus_points = int(float(str(bp_val).strip()))
+                        bonus_points = int(float(str(bp_val).replace(',', '').strip()))
                     except:
                         bonus_points = 0
-                        
+
             brand_val = "Default"
-            if category_idx is not None and row[category_idx] is not None:
-                brand_val = str(row[category_idx]).strip()
+            if category_idx is not None and category_idx < len(row) and row[category_idx] is not None:
+                brand_val = str(row[category_idx]).strip()[:100]
                 if brand_val.lower() == 'none':
                     brand_val = 'Default'
-                
+
             sales_rate = 0.0
-            if sales_rate_idx is not None and row[sales_rate_idx] is not None:
+            if sales_rate_idx is not None and sales_rate_idx < len(row) and row[sales_rate_idx] is not None:
                 sr_val = row[sales_rate_idx]
                 if isinstance(sr_val, (int, float)):
                     sales_rate = float(sr_val)
@@ -1042,7 +1156,7 @@ def admin_upload_products():
                         sales_rate = float(str(sr_val).replace('₹', '').replace(',', '').strip())
                     except:
                         sales_rate = 0.0
-                        
+
             product = existing_products.get(name)
             if product:
                 product.tag = tag
@@ -1062,18 +1176,203 @@ def admin_upload_products():
                 )
                 db.session.add(product)
                 existing_products[name] = product
-                
+
             count += 1
-            
-            # Commit in batches of 50 to avoid Supabase statement timeout
             if count % 50 == 0:
                 db.session.commit()
-            
-        db.session.commit()  # Final commit for remaining records
+
+        db.session.commit()
         return jsonify({'message': f'Successfully imported {count} products'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Failed to process file: {str(e)}'}), 500
+        return jsonify({'message': f'Failed to process product file: {str(e)}'}), 500
+
+@api.route('/admin/upload/customers', methods=['POST'])
+@jwt_required()
+def admin_upload_customers():
+    current_user = get_jwt()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    if 'file' not in request.files:
+        return jsonify({'message': 'No file uploaded'}), 400
+        
+    file = request.files['file']
+    filename = (file.filename or '').lower()
+    if not filename.endswith(('.xlsx', '.xls', '.xlsm', '.csv')):
+        return jsonify({'message': 'Only Excel files (.xlsx, .xls) or CSV files are supported'}), 400
+        
+    try:
+        excel_rows = read_uploaded_file_rows(file)
+        if not excel_rows or len(excel_rows) < 1:
+            return jsonify({'message': 'Excel sheet is empty or has no data rows'}), 400
+
+        header_keywords = ['code', 'customer', 'name', 'address', 'city', 'state', 'phone', 'mail', 'email', 'buyer', 'party', 'mobile', 'contact']
+        best_header_idx = 0
+        max_matches = -1
+        
+        for idx, row in enumerate(excel_rows[:25]):
+            if not row or all(c is None or str(c).strip() == "" for c in row):
+                continue
+            row_str = ' '.join(str(c).lower().strip() for c in row if c is not None)
+            matches = sum(1 for kw in header_keywords if kw in row_str)
+            if matches > max_matches:
+                max_matches = matches
+                best_header_idx = idx
+                
+        header_row_idx = best_header_idx
+
+        headers = [str(cell).strip() if cell is not None else "" for cell in excel_rows[header_row_idx]]
+
+        def find_col_index(headers, keywords):
+            for idx, header in enumerate(headers):
+                h_clean = header.lower().replace(' ', '').replace('_', '').replace('-', '')
+                for keyword in keywords:
+                    if keyword in h_clean:
+                        return idx
+            return None
+
+        code_idx = find_col_index(headers, ['customercode', 'code', 'custcode', 'id', 'customerno', 'no'])
+        name_idx = find_col_index(headers, ['customername', 'name', 'buyername', 'storename', 'businessname', 'party'])
+        address_idx = find_col_index(headers, ['address', 'street', 'location', 'addr'])
+        city_idx = find_col_index(headers, ['city', 'town', 'district'])
+        state_idx = find_col_index(headers, ['state', 'province', 'region'])
+        phone_idx = find_col_index(headers, ['phone', 'mobile', 'contact', 'phonenumber', 'tel', 'cell'])
+        mail_idx = find_col_index(headers, ['mail', 'email', 'emailaddress', 'mailid'])
+
+        total_records = 0
+        imported_count = 0
+        updated_count = 0
+        skipped_count = 0
+        errors = []
+
+        used_emails = set(b.email.lower() for b in User.query.all() if b.email)
+        existing_buyers_by_code = {b.customer_code: b for b in User.query.filter(User.customer_code != None).all() if b.customer_code}
+        existing_buyers_by_email = {b.email.lower(): b for b in User.query.all() if b.email}
+        existing_buyers_by_name = {b.name.lower(): b for b in User.query.all() if b.name}
+        existing_referral_codes = set(u.referral_code for u in User.query.filter(User.referral_code != None).all() if u.referral_code)
+
+        for row_num, row in enumerate(excel_rows[header_row_idx + 1:], start=header_row_idx + 2):
+            if all(cell is None or str(cell).strip() == "" for cell in row):
+                continue
+
+            total_records += 1
+
+            def get_val(col_idx):
+                if col_idx is None or col_idx >= len(row):
+                    return "0"
+                raw = row[col_idx]
+                if raw is None:
+                    return "0"
+                val = str(raw).strip()
+                return val if val != "" else "0"
+
+            code_val = get_val(code_idx)[:100]
+            name_val = get_val(name_idx)[:100]
+            address_val = get_val(address_idx)[:255]
+            city_val = get_val(city_idx)[:100]
+            state_val = get_val(state_idx)[:100]
+            phone_val = get_val(phone_idx)[:100]
+            mail_val = get_val(mail_idx)[:120]
+
+            if code_val == "0" and name_val == "0":
+                skipped_count += 1
+                errors.append(f"Row {row_num}: Both Customer Code and Customer Name are empty. Skipped.")
+                continue
+
+            if mail_val != "0" and '@' in mail_val:
+                target_email = mail_val.lower().strip()[:120]
+            else:
+                clean_key = (code_val if code_val != "0" else name_val).lower().replace(' ', '').replace('/', '').replace('\\', '').replace('_', '')[:60]
+                target_email = f"cust_{clean_key}@example.com"
+
+            clean_name = (name_val if name_val != "0" else f"Customer {code_val}")[:100]
+
+            buyer = None
+            if code_val != "0" and code_val in existing_buyers_by_code:
+                buyer = existing_buyers_by_code[code_val]
+            elif target_email in existing_buyers_by_email:
+                buyer = existing_buyers_by_email[target_email]
+            elif clean_name.lower() in existing_buyers_by_name:
+                buyer = existing_buyers_by_name[clean_name.lower()]
+
+            final_email = target_email
+            if final_email in used_emails and (not buyer or (buyer.email and buyer.email.lower() != final_email)):
+                import uuid
+                if '@' in final_email:
+                    prefix, domain = final_email.split('@', 1)
+                else:
+                    prefix, domain = final_email, 'example.com'
+                prefix = prefix[:60]
+                final_email = f"{prefix}_{uuid.uuid4().hex[:4]}@{domain}"
+                while final_email in used_emails:
+                    final_email = f"{prefix}_{uuid.uuid4().hex[:4]}@{domain}"
+
+            if buyer:
+                old_email = buyer.email.lower() if buyer.email else None
+                buyer.name = clean_name
+                buyer.business_name = clean_name
+                if code_val != "0":
+                    buyer.customer_code = code_val
+                buyer.address = address_val
+                buyer.city = city_val
+                buyer.state = state_val
+                buyer.phone = phone_val
+                if (mail_val != "0" and '@' in mail_val) or not buyer.email:
+                    if old_email and old_email in used_emails and old_email != final_email:
+                        used_emails.discard(old_email)
+                        existing_buyers_by_email.pop(old_email, None)
+                    buyer.email = final_email
+                    used_emails.add(final_email)
+                    existing_buyers_by_email[final_email] = buyer
+                updated_count += 1
+            else:
+                import uuid
+                ref_code = f"REF-CUST-{uuid.uuid4().hex[:8].upper()}"
+                while ref_code in existing_referral_codes:
+                    ref_code = f"REF-CUST-{uuid.uuid4().hex[:8].upper()}"
+                existing_referral_codes.add(ref_code)
+
+                buyer = User(
+                    name=clean_name,
+                    business_name=clean_name,
+                    email=final_email,
+                    customer_code=code_val if code_val != "0" else f"CUST-{uuid.uuid4().hex[:6].upper()}",
+                    password_hash=generate_password_hash('buyer123'),
+                    role='buyer',
+                    address=address_val,
+                    city=city_val,
+                    state=state_val,
+                    phone=phone_val,
+                    referral_code=ref_code,
+                    is_verified=True,
+                    verification_status='verified'
+                )
+                db.session.add(buyer)
+                used_emails.add(final_email)
+                existing_buyers_by_email[final_email] = buyer
+                imported_count += 1
+
+            if buyer.customer_code:
+                existing_buyers_by_code[buyer.customer_code] = buyer
+            if buyer.name:
+                existing_buyers_by_name[buyer.name.lower()] = buyer
+
+        db.session.commit()
+
+        return jsonify({
+            'message': f'Customer Master import completed. {imported_count} imported, {updated_count} updated, {skipped_count} skipped.',
+            'summary': {
+                'total_records': total_records,
+                'imported': imported_count,
+                'updated': updated_count,
+                'skipped': skipped_count,
+                'errors': errors
+            }
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Failed to process customer file: {str(e)}'}), 500
 
 @api.route('/admin/upload/invoices', methods=['POST'])
 @jwt_required()
@@ -1086,131 +1385,275 @@ def admin_upload_invoices():
         return jsonify({'message': 'No file uploaded'}), 400
         
     file = request.files['file']
-    if not file.filename.endswith('.xlsx'):
-        return jsonify({'message': 'Only Excel files (.xlsx) are supported'}), 400
+    filename = (file.filename or '').lower()
+    if not filename.endswith(('.xlsx', '.xls', '.xlsm', '.csv')):
+        return jsonify({'message': 'Only Excel files (.xlsx, .xls) or CSV files are supported'}), 400
         
     try:
-        file_bytes = file.read()
-        wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
-        sheet = wb.active
-        excel_rows = list(sheet.iter_rows(values_only=True))
-        if not excel_rows or len(excel_rows) < 2:
+        excel_rows = read_uploaded_file_rows(file)
+        if not excel_rows or len(excel_rows) < 1:
             return jsonify({'message': 'Excel sheet is empty or has no data rows'}), 400
             
-        # Scan first 15 rows to find the header row index
-        header_row_idx = -1
-        for idx, row in enumerate(excel_rows[:15]):
-            row_str = [str(c).lower().strip() for c in row if c is not None]
-            if 'no' in row_str and 'customer' in row_str and 'date' in row_str:
-                header_row_idx = idx
-                break
+        # 1. Smart Header Row Selection by scoring candidate rows
+        header_keywords = [
+            'invoice', 'invoiceno', 'bill', 'billno', 'vch', 'voucher', 'no', 'number',
+            'customer', 'buyer', 'party', 'client', 'name', 'store',
+            'amount', 'total', 'netamt', 'val', 'price', 'salesman', 'rep', 'salesperson', 'item', 'product'
+        ]
+        
+        best_header_idx = 0
+        max_matches = -1
+        
+        for idx, row in enumerate(excel_rows[:25]):
+            if not row or all(c is None or str(c).strip() == "" for c in row):
+                continue
+            row_str = ' '.join(str(c).lower().strip() for c in row if c is not None)
+            matches = sum(1 for kw in header_keywords if kw in row_str)
+            if matches > max_matches:
+                max_matches = matches
+                best_header_idx = idx
                 
-        if header_row_idx == -1:
-            return jsonify({'message': 'Header row containing "No", "Date", and "Customer" not found.'}), 400
-            
+        header_row_idx = best_header_idx
         headers = [str(cell).strip() if cell is not None else "" for cell in excel_rows[header_row_idx]]
         
-        def find_col_index(headers, keywords):
-            for idx, header in enumerate(headers):
-                h_clean = header.lower().replace(' ', '').replace('(', '').replace(')', '').replace('₹', '')
-                for keyword in keywords:
-                    if keyword in h_clean:
-                        return idx
-            return None
+        def get_clean_header(h):
+            return str(h or '').lower().replace(' ', '').replace('(', '').replace(')', '').replace('₹', '').replace('_', '').replace('-', '').replace('.', '')
 
-        no_idx = find_col_index(headers, ['invoicenumber', 'billno', 'billnumber', 'no'])
-        customer_idx = find_col_index(headers, ['customer', 'buyername', 'buyeremail', 'buyer'])
-        salesman_idx = find_col_index(headers, ['salesman', 'repemail', 'representative', 'rep'])
-        amount_idx = find_col_index(headers, ['billamount', 'totalamount'])
-        # Fallback for amount if billamount isn't found
+        def is_serial_no_col(h):
+            c = get_clean_header(h)
+            return c in ['sno', 'slno', 'srno', 'serialno', 'serialnumber', 'seqno', 'rowno', 'index', 'sl'] or c.startswith(('sno', 'slno', 'srno'))
+
+        # 2. Precision Column Index Matching
+        # Invoice Number Column:
+        no_idx = None
+        for idx, h in enumerate(headers):
+            if is_serial_no_col(h):
+                continue
+            ch = get_clean_header(h)
+            if ch in ['no', 'invoiceno', 'invoicenumber', 'vchno', 'voucherno', 'billno', 'billnumber', 'docno', 'docnumber', 'invno']:
+                no_idx = idx
+                break
+
+        if no_idx is None:
+            for idx, h in enumerate(headers):
+                if is_serial_no_col(h):
+                    continue
+                ch = get_clean_header(h)
+                if any(kw in ch for kw in ['invoiceno', 'invoicenumber', 'vchno', 'voucherno', 'billno', 'billnumber', 'docno', 'docnumber', 'invno', 'refno', 'transactionid', 'receiptno']):
+                    no_idx = idx
+                    break
+
+        if no_idx is None:
+            for idx, h in enumerate(headers):
+                if is_serial_no_col(h):
+                    continue
+                ch = get_clean_header(h)
+                if any(kw in ch for kw in ['invoice', 'vch', 'voucher', 'bill', 'doc', 'ref', 'txn']):
+                    no_idx = idx
+                    break
+
+        if no_idx is None:
+            for idx, h in enumerate(headers):
+                if not is_serial_no_col(h):
+                    no_idx = idx
+                    break
+            if no_idx is None:
+                no_idx = 0
+
+        # Customer / Party Column:
+        customer_idx = None
+        for idx, h in enumerate(headers):
+            ch = get_clean_header(h)
+            if ch in ['customer', 'customername', 'party', 'partyname', 'buyer', 'buyername', 'store', 'storename', 'businessname', 'account', 'accountname', 'particulars']:
+                customer_idx = idx
+                break
+
+        if customer_idx is None:
+            for idx, h in enumerate(headers):
+                ch = get_clean_header(h)
+                if any(kw in ch for kw in ['customer', 'buyer', 'party', 'store', 'client', 'account', 'particulars', 'billed', 'name']):
+                    customer_idx = idx
+                    break
+
+        if customer_idx is None:
+            customer_idx = 1 if len(headers) > 1 else 0
+
+        # Amount Column:
+        amount_idx = None
+        for idx, h in enumerate(headers):
+            ch = get_clean_header(h)
+            if ch in ['billamount', 'netamount', 'invoiceamount', 'grandtotal', 'totalamount', 'billamt', 'netamt', 'invamt', 'amount', 'total']:
+                amount_idx = idx
+                break
+
         if amount_idx is None:
-            amount_idx = find_col_index(headers, ['amount', 'total'])
-            
-        # Find item amount index (index for individual line item amount, distinct from invoice bill amount)
+            for idx, h in enumerate(headers):
+                ch = get_clean_header(h)
+                if any(kw in ch for kw in ['billamount', 'netamount', 'invoiceamount', 'grandtotal', 'totalamount', 'taxableamount', 'taxablevalue', 'totalvalue', 'netvalue', 'invoicevalue', 'billvalue', 'invvalue', 'debitamount', 'totalamt', 'amount', 'net', 'total', 'val', 'price']):
+                    amount_idx = idx
+                    break
+
+        if amount_idx is None:
+            amount_idx = 2 if len(headers) > 2 else (1 if len(headers) > 1 else 0)
+
+        # Salesman Column:
+        salesman_idx = None
+        for idx, h in enumerate(headers):
+            ch = get_clean_header(h)
+            if any(kw in ch for kw in ['salesman', 'salesperson', 'salesrep', 'executive', 'representative', 'repemail', 'salesexecutive', 'employee', 'agent', 'rep', 'se']):
+                salesman_idx = idx
+                break
+
+        # Item / Product Column:
+        item_idx = None
+        for idx, h in enumerate(headers):
+            if idx in [no_idx, customer_idx, amount_idx]:
+                continue
+            ch = get_clean_header(h)
+            if ch in ['item', 'itemname', 'product', 'productname', 'description', 'particulars', 'goods', 'stockitem']:
+                item_idx = idx
+                break
+
+        if item_idx is None:
+            for idx, h in enumerate(headers):
+                if idx in [no_idx, customer_idx, amount_idx]:
+                    continue
+                ch = get_clean_header(h)
+                if any(kw in ch for kw in ['productname', 'itemname', 'products', 'product', 'items', 'item', 'description', 'particulars', 'goods', 'title', 'stockitem']):
+                    item_idx = idx
+                    break
+
+        # Item Amount Column:
         item_amount_idx = None
-        for idx, header in enumerate(headers):
-            h_clean = header.lower().replace(' ', '').replace('(', '').replace(')', '').replace('₹', '')
-            if 'amount' in h_clean and idx != amount_idx:
+        for idx, h in enumerate(headers):
+            if idx == amount_idx:
+                continue
+            ch = get_clean_header(h)
+            if 'amount' in ch or 'amt' in ch:
                 item_amount_idx = idx
                 break
-                
-        item_idx = find_col_index(headers, ['item', 'productname', 'products', 'product'])
-        
-        if no_idx is None or customer_idx is None or amount_idx is None:
-            return jsonify({'message': 'Required columns (No/Invoice Number, Customer, Bill Amount) not found in Excel sheet.'}), 400
+
+        # Brand Column:
+        brand_idx = None
+        for idx, h in enumerate(headers):
+            ch = get_clean_header(h)
+            if 'brand' in ch or 'manufacturer' in ch or 'make' in ch:
+                brand_idx = idx
+                break
+
+        # Helper for parsing numeric amount safely
+        def parse_amount(val):
+            if val is None:
+                return 0.0
+            if isinstance(val, (int, float)):
+                return float(val)
+            s = str(val).strip()
+            if not s:
+                return 0.0
+            import re
+            cleaned = re.sub(r'[^\d.-]', '', s.replace(',', '').replace('/-', ''))
+            try:
+                return float(cleaned) if cleaned else 0.0
+            except:
+                return 0.0
 
         invoices_dict = {}
+        last_inv_no = ""
+        last_customer = ""
+        last_salesman = ""
+
         for row in excel_rows[header_row_idx + 1:]:
-            if all(cell is None for cell in row):
+            if all(cell is None or str(cell).strip() == "" for cell in row):
                 continue
                 
-            inv_no_val = row[no_idx]
-            if inv_no_val is None:
-                continue
-            inv_no = str(inv_no_val).strip().upper()
+            inv_no_raw = row[no_idx] if no_idx < len(row) else None
+            inv_no = str(inv_no_raw).strip().upper() if inv_no_raw is not None else ""
             
-            # Skip empty lines, group labels, total summaries
-            if not inv_no or inv_no in ['NO', 'TOTAL', 'GRAND TOTAL', 'SUBTOTAL'] or inv_no.startswith('BRANCH:'):
+            # Fallback to Ref No if No cell is blank or 0
+            if not inv_no or inv_no in ["0", "NONE", "NULL"]:
+                ref_no_raw = row[2] if len(row) > 2 else None
+                if ref_no_raw is not None and str(ref_no_raw).strip():
+                    inv_no = str(ref_no_raw).strip().upper()
+
+            if not inv_no and last_inv_no:
+                inv_no = last_inv_no
+
+            if not inv_no or inv_no in ['NO', 'INVOICE NUMBER', 'BILL NO', 'TOTAL', 'GRAND TOTAL', 'SUBTOTAL', 'SUMMARY', 'REPORT', 'S.NO', 'SL.NO', 'SR.NO'] or inv_no.startswith('BRANCH:'):
                 continue
-                
-            customer = str(row[customer_idx] or '').strip()
-            # If Customer is identical to customer header or is empty, skip
-            if not customer or customer.lower() in ['customer', 'total', 'grand total', 'subtotal']:
-                continue
-                
-            salesman = str(row[salesman_idx] or '').strip() if salesman_idx is not None else ""
-            
-            amount_val = row[amount_idx]
-            if isinstance(amount_val, (int, float)):
-                amount = float(amount_val)
-            else:
-                amount_str = str(amount_val or '0').strip()
-                amount_str = amount_str.replace('₹', '').replace(',', '').strip()
-                try:
-                    amount = float(amount_str) if amount_str else 0.0
-                except:
-                    amount = 0.0
-                
-            item_amount = 0.0
-            if item_amount_idx is not None:
-                item_amount_val = row[item_amount_idx]
-                if isinstance(item_amount_val, (int, float)):
-                    item_amount = float(item_amount_val)
-                else:
-                    item_amount_str = str(item_amount_val or '0').strip()
-                    item_amount_str = item_amount_str.replace('₹', '').replace(',', '').strip()
-                    try:
-                        item_amount = float(item_amount_str) if item_amount_str else 0.0
-                    except:
-                        item_amount = 0.0
-                        
-            item = str(row[item_idx] or '').strip() if item_idx is not None else ""
-            
+
+            last_inv_no = inv_no
+
+            customer_raw = row[customer_idx] if customer_idx < len(row) else None
+            customer = str(customer_raw).strip() if customer_raw is not None else ""
+            if not customer and last_customer and inv_no == last_inv_no:
+                customer = last_customer
+
+            if customer and customer.lower() not in ['customer', 'buyer', 'party', 'total', 'grand total', 'subtotal', 'summary', 'report']:
+                last_customer = customer
+
+            salesman_raw = row[salesman_idx] if (salesman_idx is not None and salesman_idx < len(row)) else None
+            salesman = str(salesman_raw).strip() if salesman_raw is not None else ""
+            if not salesman and last_salesman and inv_no == last_inv_no:
+                salesman = last_salesman
+
+            if salesman:
+                last_salesman = salesman
+
+            amount = parse_amount(row[amount_idx]) if amount_idx < len(row) else 0.0
+            item_amount = parse_amount(row[item_amount_idx]) if (item_amount_idx is not None and item_amount_idx < len(row)) else 0.0
+            item = str(row[item_idx] or '').strip() if (item_idx is not None and item_idx < len(row)) else ""
+            brand = str(row[brand_idx] or '').strip() if (brand_idx is not None and brand_idx < len(row)) else ""
+
             if inv_no not in invoices_dict:
                 invoices_dict[inv_no] = {
                     'customer': customer,
                     'salesman': salesman,
                     'amount': amount,
                     'items': [],
+                    'brands': {},
                     'items_total_amount': 0.0
                 }
-            
-            # Aggregate values
+
             if customer and not invoices_dict[inv_no]['customer']:
                 invoices_dict[inv_no]['customer'] = customer
             if salesman and not invoices_dict[inv_no]['salesman']:
                 invoices_dict[inv_no]['salesman'] = salesman
             if amount > invoices_dict[inv_no]['amount']:
                 invoices_dict[inv_no]['amount'] = amount
-                
+
             if item:
                 invoices_dict[inv_no]['items'].append(item)
                 invoices_dict[inv_no]['items_total_amount'] += item_amount
+                if brand and brand.lower() not in ['brand', 'none', 'null', '0']:
+                    invoices_dict[inv_no]['brands'][item] = brand
 
-        # Prefetch products, buyers, representatives to avoid N+1 queries
         existing_products = {p.name: p for p in Product.query.all()}
-        existing_buyers = {b.name: b for b in User.query.filter_by(role='buyer').all()}
-        existing_reps = {r.name: r for r in User.query.filter_by(role='rep').all()}
+
+        # Build multi-index buyer lookup table
+        all_buyers = User.query.filter_by(role='buyer').all()
+        buyer_lookup = {}
+        for b in all_buyers:
+            if b.name:
+                buyer_lookup[b.name.lower().strip()] = b
+            if b.business_name:
+                buyer_lookup[b.business_name.lower().strip()] = b
+            if b.customer_code:
+                buyer_lookup[b.customer_code.lower().strip()] = b
+            if b.email:
+                buyer_lookup[b.email.lower().strip()] = b
+
+        # Build multi-index rep lookup table
+        all_reps = User.query.filter_by(role='rep').all()
+        rep_lookup = {}
+        for r in all_reps:
+            if r.name:
+                rep_lookup[r.name.lower().strip()] = r
+            if r.email:
+                rep_lookup[r.email.lower().strip()] = r
+            if r.phone:
+                rep_lookup[r.phone.lower().strip()] = r
+
+        existing_referral_codes = set(u.referral_code for u in User.query.filter(User.referral_code != None).all() if u.referral_code)
         
         count = 0
         for invoice_number, info in invoices_dict.items():
@@ -1220,7 +1663,6 @@ def admin_upload_invoices():
             items_list = info['items']
             items_total = info['items_total_amount']
             
-            # If bill amount is 0 or less, fallback to the sum of line item amounts
             if amount <= 0:
                 amount = items_total
                 
@@ -1229,24 +1671,30 @@ def admin_upload_invoices():
                 
             products_str = ", ".join(items_list)
             
-            # Ensure products are auto-created in catalog if not existing
             for item in items_list:
+                item_brand = info['brands'].get(item, 'Default')
                 product = existing_products.get(item)
                 if not product:
-                    product = Product(name=item, tag='normal', bonus_points=0)
+                    product = Product(name=item, tag='normal', bonus_points=0, brand=item_brand)
                     db.session.add(product)
                     existing_products[item] = product
+                elif item_brand != 'Default' and (not product.brand or product.brand == 'Default'):
+                    product.brand = item_brand
             db.session.commit()
             
-            # Resolve customer
-            buyer = existing_buyers.get(customer)
+            cust_key = customer.lower().strip()
+            buyer = buyer_lookup.get(cust_key)
             if not buyer:
                 clean_name = customer.lower().replace(' ', '')
                 email = f"{clean_name}@example.com"
-                buyer = User.query.filter_by(email=email).first()
+                buyer = buyer_lookup.get(email)
                 if not buyer:
-                    import random
-                    ref_code = f"REF-{clean_name.upper()[:5]}-{random.randint(1000, 9999)}"
+                    import uuid
+                    ref_code = f"REF-BUYER-{uuid.uuid4().hex[:8].upper()}"
+                    while ref_code in existing_referral_codes:
+                        ref_code = f"REF-BUYER-{uuid.uuid4().hex[:8].upper()}"
+                    existing_referral_codes.add(ref_code)
+
                     buyer = User(
                         name=customer,
                         email=email,
@@ -1259,19 +1707,24 @@ def admin_upload_invoices():
                     )
                     db.session.add(buyer)
                     db.session.commit()
-                existing_buyers[customer] = buyer
+                buyer_lookup[cust_key] = buyer
+                buyer_lookup[buyer.email.lower()] = buyer
             
-            # Resolve representative
             rep_id = None
             if salesman:
-                rep = existing_reps.get(salesman)
+                rep_key = salesman.lower().strip()
+                rep = rep_lookup.get(rep_key)
                 if not rep:
                     clean_rep_name = salesman.lower().replace(' ', '')
                     rep_email = f"{clean_rep_name}@sales.com"
-                    rep = User.query.filter_by(email=rep_email, role='rep').first()
+                    rep = rep_lookup.get(rep_email)
                     if not rep:
-                        import random
-                        ref_code = f"REF-{clean_rep_name.upper()[:5]}-{random.randint(1000, 9999)}"
+                        import uuid
+                        ref_code = f"REF-REP-{uuid.uuid4().hex[:8].upper()}"
+                        while ref_code in existing_referral_codes:
+                            ref_code = f"REF-REP-{uuid.uuid4().hex[:8].upper()}"
+                        existing_referral_codes.add(ref_code)
+
                         rep = User(
                             name=salesman,
                             email=rep_email,
@@ -1283,7 +1736,8 @@ def admin_upload_invoices():
                         )
                         db.session.add(rep)
                         db.session.commit()
-                    existing_reps[salesman] = rep
+                    rep_lookup[rep_key] = rep
+                    rep_lookup[rep.email.lower()] = rep
                 rep_id = rep.id
                 
             status = 'paid'
@@ -1321,7 +1775,6 @@ def admin_upload_invoices():
             
             if is_new_payment:
                 invoice.paid_at = datetime.utcnow()
-                
                 config = Configuration.query.filter_by(version=invoice.config_version).first()
                 if not config:
                     config = Configuration.query.order_by(Configuration.version.desc()).first()
@@ -1360,10 +1813,16 @@ def admin_upload_invoices():
                 
             count += 1
             
+        if count == 0:
+            headers_str = ", ".join([h for h in headers if h]) if headers else "None"
+            return jsonify({
+                'message': f'No valid invoice records could be matched (0 records imported). Detected headers: [{headers_str}]. Please ensure your file has columns for Invoice Number, Customer/Party Name, and Amount.'
+            }), 400
+            
         return jsonify({'message': f'Successfully imported {count} invoices and updated dashboards.'}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Failed to process file: {str(e)}'}), 500
+        return jsonify({'message': f'Failed to process invoice file: {str(e)}'}), 500
 
 
 # ==================== POINTS CALCULATION HELPER ====================

@@ -19,6 +19,9 @@ export default function AdminReportsPage() {
   const [error, setError] = useState('');
 
   const fetchAnalytics = async () => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+      return;
+    }
     setLoading(true);
     setError('');
     try {
