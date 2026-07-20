@@ -357,7 +357,7 @@ def get_analytics_report():
     current_month_str = datetime.utcnow().strftime('%Y-%m')
     for r in reps:
         paid_invoices = Invoice.query.filter_by(rep_id=r.id, status='paid').all()
-        credited_points = sum(inv.points_rep for inv in paid_invoices)
+        credited_points = sum((inv.points_rep or 0) for inv in paid_invoices)
         if credited_points > 0:
             payout_summaries.append({
                 'rep_name': r.name,
@@ -421,7 +421,7 @@ def rep_dashboard():
     
     # Rep earns 1% of invoice value. Credits only after invoice is paid.
     pending_points = sum(int(inv.amount * 0.01) for inv in invoices if inv.status == 'pending')
-    credited_points = sum(inv.points_rep for inv in invoices if inv.status == 'paid')
+    credited_points = sum((inv.points_rep or 0) for inv in invoices if inv.status == 'paid')
     
     # Referred buyers
     buyers = User.query.filter_by(referrer_id=rep.id).all()
@@ -877,7 +877,7 @@ def admin_reps():
         paid_invoices = [inv for inv in invoices if inv.status == 'paid']
         pending_invoices = [inv for inv in invoices if inv.status == 'pending']
 
-        credited_points = sum(inv.points_rep for inv in paid_invoices)
+        credited_points = sum((inv.points_rep or 0) for inv in paid_invoices)
         pending_points = sum(int(inv.amount * (latest_config.referral_rate if latest_config else 0.01))
                              for inv in pending_invoices if inv.amount >= min_purchase)
 
