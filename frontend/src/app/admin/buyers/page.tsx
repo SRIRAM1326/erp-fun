@@ -40,15 +40,15 @@ export default function AdminBuyersPage() {
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Buyer Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage wholesale buyers, tiers, and points balances.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Customer Management</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage wholesale customers, tiers, and points balances.</p>
         </div>
         <div className="flex gap-2">
           <button className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
             <Download className="w-4 h-4" /> Export
           </button>
           <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2 shadow-sm">
-            <Plus className="w-4 h-4" /> Add Buyer
+            <Plus className="w-4 h-4" /> Add Customer
           </button>
         </div>
       </div>
@@ -80,18 +80,17 @@ export default function AdminBuyersPage() {
                 <th className="px-6 py-4 font-medium">Contact</th>
                 <th className="px-6 py-4 font-medium">Tier</th>
                 <th className="px-6 py-4 font-medium text-right">Points Balance</th>
-                <th className="px-6 py-4 font-medium text-center">Status</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">Loading buyers...</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">Loading buyers...</td>
                 </tr>
               ) : buyers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No buyers found.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-slate-500">No buyers found.</td>
                 </tr>
               ) : (
                 buyers.map((buyer) => (
@@ -125,19 +124,6 @@ export default function AdminBuyersPage() {
                     </td>
                     <td className="px-6 py-4 text-right font-bold text-slate-900">
                       {(buyer.total_points || 0).toLocaleString()} pts
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {buyer.is_verified ? (
-                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                          <span>Verified</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                          <span>Pending</span>
-                        </span>
-                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       {!buyer.is_verified ? (

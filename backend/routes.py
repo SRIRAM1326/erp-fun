@@ -1369,9 +1369,13 @@ def calculate_invoice_points(inv, config):
     if days_elapsed < 0:
         days_elapsed = 0
         
-    base_buyer_points = int(inv.amount * 0.01)
+    inv_pct = getattr(config, 'invoice_reward_percentage', 0.50) if config else 0.50
+    if inv_pct is None:
+        inv_pct = 0.50
+    base_buyer_points = int(inv.amount * inv_pct)
     multiplier = 1.0
     rules = []
+    rules.append(f"BR-01 (Base conversion {inv_pct * 100:.1f}%)")
     
     credit_period = config.credit_period
     cutoff = config.forfeiture_cutoff
@@ -1441,8 +1445,13 @@ def admin_get_config():
         db.session.add(config)
         db.session.commit()
         
+    inv_pct = getattr(config, 'invoice_reward_percentage', 0.50)
+    if inv_pct is None:
+        inv_pct = 0.50
+        
     return jsonify({
         'version': config.version,
+        'invoice_reward_percentage': inv_pct,
         'credit_period': config.credit_period,
         'forfeiture_cutoff': config.forfeiture_cutoff,
         'high_spend_threshold': config.high_spend_threshold,
@@ -1469,8 +1478,12 @@ def admin_get_config_versions():
     
     result = []
     for c in configs:
+        inv_pct = getattr(c, 'invoice_reward_percentage', 0.50)
+        if inv_pct is None:
+            inv_pct = 0.50
         result.append({
             'version': c.version,
+            'invoice_reward_percentage': inv_pct,
             'credit_period': c.credit_period,
             'forfeiture_cutoff': c.forfeiture_cutoff,
             'high_spend_threshold': c.high_spend_threshold,
@@ -1503,6 +1516,7 @@ def admin_post_config():
     
     new_config = Configuration(
         version=next_version,
+        invoice_reward_percentage=float(data.get('invoice_reward_percentage', 0.50)),
         credit_period=int(data.get('credit_period', 7)),
         forfeiture_cutoff=int(data.get('forfeiture_cutoff', 30)),
         high_spend_threshold=float(data.get('high_spend_threshold', 200000.0)),

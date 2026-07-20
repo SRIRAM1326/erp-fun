@@ -20,6 +20,7 @@ export default function AdminInvoices() {
   const [newAmount, setNewAmount] = useState('');
   const [modalError, setModalError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchInvoices = async () => {
     try {
@@ -104,6 +105,14 @@ export default function AdminInvoices() {
     }
   };
 
+  const filteredInvoices = invoices.filter((inv) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    return (inv.invoice_number && inv.invoice_number.toLowerCase().includes(query)) ||
+           (inv.buyer_name && inv.buyer_name.toLowerCase().includes(query)) ||
+           (inv.rep_name && inv.rep_name.toLowerCase().includes(query));
+  });
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -134,6 +143,20 @@ export default function AdminInvoices() {
         </div>
       )}
 
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex items-center">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search by invoice number or buyer..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-sm"
+          />
+        </div>
+      </div>
+
       {/* Table Container */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         {/* Table */}
@@ -156,12 +179,14 @@ export default function AdminInvoices() {
                 <tr>
                   <td colSpan={8} className="px-6 py-8 text-center text-slate-500">Loading invoices...</td>
                 </tr>
-              ) : invoices.length === 0 ? (
+              ) : filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">No invoices registered in the system.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">
+                    {invoices.length === 0 ? 'No invoices registered in the system.' : 'No invoices matched your search query.'}
+                  </td>
                 </tr>
               ) : (
-                invoices.map((inv) => (
+                filteredInvoices.map((inv: any) => (
                   <tr key={inv.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-4 font-bold text-slate-900">
                       <div className="flex items-center gap-2">
@@ -272,7 +297,7 @@ export default function AdminInvoices() {
                 >
                   <option value="">None / Direct Store Purchase</option>
                   {reps.map(r => (
-                    <option key={r.id} value={r.id}>{r.name} ({r.referral_code})</option>
+                    <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
               </div>

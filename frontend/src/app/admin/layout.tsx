@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, color: 'text-blue-400' },
-    { name: 'Buyers', href: '/admin/buyers', icon: Users, color: 'text-emerald-400' },
+    { name: 'Customers', href: '/admin/buyers', icon: Users, color: 'text-emerald-400' },
     { name: 'Marketing Representatives', href: '/admin/reps', icon: Award, color: 'text-violet-400' },
     { name: 'Invoices', href: '/admin/invoices', icon: FileText, color: 'text-amber-400' },
     { name: 'Product Tagging', href: '/admin/products', icon: Tag, color: 'text-rose-400' },
@@ -115,7 +115,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search buyers, invoices, or redemptions..." 
+              placeholder="Search customers, invoices, or redemptions..." 
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-colors"
             />
           </div>

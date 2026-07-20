@@ -6,7 +6,7 @@ import {
   Tag, Plus, Edit2, Trash2, RefreshCw, X, Info,
   PackageCheck, Zap, Archive, Star, Box, TrendingUp,
   ShoppingCart, LayoutGrid, List, BarChart3, Award,
-  ChevronDown, ChevronRight, Search, Filter
+  ChevronDown, ChevronRight, Search
 } from 'lucide-react';
 
 const TAG_OPTIONS = [
@@ -22,10 +22,10 @@ const EMPTY_FORM = { name: '', tag: 'special', bonus_points: 300, category: '', 
 type ViewMode = 'sales' | 'brandwise' | 'categorywise' | 'productwise';
 
 const VIEW_TABS: { id: ViewMode; label: string; icon: any }[] = [
-  { id: 'sales',        label: 'Sales',        icon: TrendingUp  },
-  { id: 'brandwise',    label: 'Brandwise',    icon: Award       },
   { id: 'categorywise', label: 'Categorywise', icon: LayoutGrid  },
+  { id: 'brandwise',    label: 'Brandwise',    icon: Award       },
   { id: 'productwise',  label: 'Productwise',  icon: List        },
+  { id: 'sales',        label: 'Sales Report', icon: TrendingUp  },
 ];
 
 export default function AdminProductsPage() {
@@ -39,7 +39,7 @@ export default function AdminProductsPage() {
   const [filterTag, setFilterTag] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>('brandwise');
+  const [viewMode, setViewMode] = useState<ViewMode>('categorywise');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const itemsPerPage = 24;
 
@@ -402,7 +402,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Tagging</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Assign bonus reward points to products. Browse by Sales, Brand, Category, or individual Product.
+            Assign bonus reward points to products. Browse by Category, Brand, Product, or Sales Report.
           </p>
         </div>
         <div className="flex gap-2">
@@ -424,12 +424,14 @@ export default function AdminProductsPage() {
         ].map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center mb-3`}>
-                <Icon className={`w-4 h-4 ${card.color}`} />
+            <div key={card.label} className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-sm flex items-center gap-3">
+              <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
+                <Icon className={`w-3.5 h-3.5 ${card.color}`} />
               </div>
-              <p className="text-xl font-bold text-slate-900">{card.value}</p>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">{card.label}</p>
+              <div>
+                <p className="text-sm font-bold text-slate-900 leading-none">{card.value}</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-1 leading-none">{card.label}</p>
+              </div>
             </div>
           );
         })}
@@ -470,22 +472,6 @@ export default function AdminProductsPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-          </div>
-          <div className="flex gap-2 flex-wrap items-center">
-            <Filter className="w-4 h-4 text-slate-400" />
-            {[{ value: '', label: 'All Tags' }, ...TAG_OPTIONS].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setFilterTag(opt.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
-                  filterTag === opt.value
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
           </div>
         </div>
       </div>

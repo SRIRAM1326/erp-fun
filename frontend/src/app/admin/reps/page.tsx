@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { api } from '@/lib/api';
 import {
   Award, Users, FileText, Wallet, TrendingUp, X, CheckCircle2,
   AlertTriangle, Phone, Plus, Edit2, PowerOff, Power,
   Trash2, RefreshCw, ArrowUpRight, ShoppingBag, BarChart3,
-  Clock, BadgeCheck, ChevronDown, ChevronUp
+  Clock, BadgeCheck, ChevronDown, ChevronUp, Calendar
 } from 'lucide-react';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', password: 'rep123' };
@@ -17,6 +17,7 @@ export default function AdminReps() {
   const [selectedRep, setSelectedRep] = useState<any | null>(null);
   const [repInvoices, setRepInvoices] = useState<any[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoiceTimeFilter, setInvoiceTimeFilter] = useState<'day' | 'week' | 'month' | 'all'>('month');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -118,6 +119,25 @@ export default function AdminReps() {
     creditedPoints: acc.creditedPoints + r.credited_points,
     pendingPoints: acc.pendingPoints + r.pending_points,
   }), { total: 0, active: 0, totalSales: 0, creditedPoints: 0, pendingPoints: 0 });
+
+  const filteredInvoices = useMemo(() => {
+    if (!repInvoices || repInvoices.length === 0) return [];
+    if (invoiceTimeFilter === 'all') return repInvoices;
+
+    const now = new Date();
+    return repInvoices.filter((inv) => {
+      if (!inv.created_at) return true;
+      const invDate = new Date(inv.created_at);
+      const diffMs = now.getTime() - invDate.getTime();
+      if (diffMs < 0) return true;
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+      if (invoiceTimeFilter === 'day') return diffDays <= 1;
+      if (invoiceTimeFilter === 'week') return diffDays <= 7;
+      if (invoiceTimeFilter === 'month') return diffDays <= 30;
+      return true;
+    });
+  }, [repInvoices, invoiceTimeFilter]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -284,16 +304,48 @@ export default function AdminReps() {
 
                             {/* Invoice list */}
                             <div>
-                              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">Linked Invoice Details</h4>
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-2 border-b border-purple-100/60">
+                                <div>
+                                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Calendar className="w-3.5 h-3.5 text-purple-600" /> Linked Invoice Details
+                                  </h4>
+                                  <p className="text-[11px] text-slate-500 mt-0.5">
+                                    Showing {filteredInvoices.length} {filteredInvoices.length === 1 ? 'invoice' : 'invoices'}
+                                    {invoiceTimeFilter !== 'all' && ` in the last ${invoiceTimeFilter}`}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
+                                  {[
+                                    { id: 'day', label: '1 Day' },
+                                    { id: 'week', label: '1 Week' },
+                                    { id: 'month', label: '1 Month' },
+                                    { id: 'all', label: 'All Time' },
+                                  ].map((tab) => (
+                                    <button
+                                      key={tab.id}
+                                      onClick={() => setInvoiceTimeFilter(tab.id as any)}
+                                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                                        invoiceTimeFilter === tab.id
+                                          ? 'bg-purple-600 text-white shadow-sm font-bold'
+                                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                                      }`}
+                                    >
+                                      {tab.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                               {invoicesLoading ? (
                                 <div className="py-6 text-center text-slate-400 flex items-center justify-center gap-2">
                                   <RefreshCw className="w-4 h-4 animate-spin" /> Loading invoices...
                                 </div>
                               ) : repInvoices.length === 0 ? (
                                 <p className="text-xs text-slate-400 italic text-center py-4">No invoices linked to this representative.</p>
+                              ) : filteredInvoices.length === 0 ? (
+                                <p className="text-xs text-slate-400 italic text-center py-4">No invoices found for the selected time range ({invoiceTimeFilter}).</p>
                               ) : (
                                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                                  {repInvoices.map((inv) => (
+                                  {filteredInvoices.map((inv) => (
                                     <div key={inv.id} className="bg-white border border-slate-100 rounded-lg p-3 shadow-sm space-y-2 hover:border-purple-200 transition-colors">
                                       <div className="flex justify-between items-start">
                                         <div>

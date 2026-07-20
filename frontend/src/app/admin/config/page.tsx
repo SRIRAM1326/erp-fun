@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import {
   Sliders, Save, RefreshCw, Layers, Info, AlertTriangle,
   CheckCircle2, Clock, CreditCard, TrendingUp, Users, Gift, 
-  Store, Calculator, Sparkles, HelpCircle, ShieldAlert
+  Store, Calculator, Sparkles, HelpCircle, ShieldAlert, Percent
 } from 'lucide-react';
 
 interface ConfigField {
@@ -23,8 +23,17 @@ interface ConfigField {
 const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = [
   {
     title: 'Payment & Credit Period',
-    desc: 'Controls when buyers earn double vs. reduced vs. zero points based on how quickly invoices are paid.',
+    desc: 'Controls base invoice points conversion percentage, payment credit windows, and forfeiture cutoff.',
     fields: [
+      {
+        key: 'invoice_reward_percentage',
+        label: 'Invoice to Reward Points Percentage',
+        description: 'This field defines the percentage of the invoice amount that will be converted into reward points. For example, if a customer makes a purchase of ₹50,000 and the Invoice to Reward Points Percentage is set to 50%, the customer will receive 25,000 reward points.',
+        type: 'percent',
+        step: '0.01',
+        icon: Percent,
+        usedIn: ['Customer Portal', 'Admin Portal'],
+      },
       {
         key: 'credit_period',
         label: 'Credit Period (Days)',
@@ -258,6 +267,7 @@ export default function AdminRewardConfigPage() {
   };
 
   // Live Simulator Calculations
+  const invoiceRewardPct = config?.invoice_reward_percentage ?? 0.50;
   const creditPeriod = config?.credit_period ?? 7;
   const forfeitureCutoff = config?.forfeiture_cutoff ?? 30;
   const highSpendThreshold = config?.high_spend_threshold ?? 200000;
@@ -380,7 +390,7 @@ export default function AdminRewardConfigPage() {
                   <h4 className="text-xs font-bold tracking-wider text-slate-200 uppercase">Live Engine Simulator</h4>
                 </div>
 
-                {/* Tab 0 Simulator (Credit Period Decay) */}
+                {/* Tab 0 Simulator (Credit Period Decay & Base Conversion) */}
                 {activeTab === 0 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
@@ -407,7 +417,7 @@ export default function AdminRewardConfigPage() {
                       </div>
                     </div>
                     
-                    <div className="bg-slate-950 p-4 rounded-xl text-center space-y-1.5 border border-slate-850">
+                    <div className="bg-slate-950 p-4 rounded-xl text-center space-y-2 border border-slate-850">
                       <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Point Multiplier Factor</p>
                       <p className={`text-3xl font-black ${
                         getSimMultiplier() === 2.0 ? 'text-emerald-400' :
@@ -420,6 +430,18 @@ export default function AdminRewardConfigPage() {
                          simDaysToPay > forfeitureCutoff ? '🛑 Forfeited: 0 points credited' :
                          '⚠️ Scale Decay: Linear point penalty applied'}
                       </span>
+
+                      <div className="pt-2 border-t border-slate-800 text-left text-[11px] space-y-1 text-slate-400">
+                        <p className="font-semibold text-slate-300">Example: ₹50,000 Invoice</p>
+                        <div className="flex justify-between">
+                          <span>Base ({(invoiceRewardPct * 100).toFixed(1)}%):</span>
+                          <span className="font-mono text-slate-200">{Math.round(50000 * invoiceRewardPct).toLocaleString()} pts</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-blue-400">
+                          <span>Earned Points:</span>
+                          <span className="font-mono">{Math.round(50000 * invoiceRewardPct * getSimMultiplier()).toLocaleString()} pts</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

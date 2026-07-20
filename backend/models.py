@@ -107,6 +107,7 @@ class Product(db.Model):
 class Configuration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     version = db.Column(db.Integer, default=1)
+    invoice_reward_percentage = db.Column(db.Float, default=0.50)
     credit_period = db.Column(db.Integer, default=7)
     forfeiture_cutoff = db.Column(db.Integer, default=30)
     high_spend_threshold = db.Column(db.Float, default=200000.0)

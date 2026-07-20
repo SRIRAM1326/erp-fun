@@ -18,6 +18,14 @@ def create_app(config_class=Config):
     
     with app.app_context():
         db.create_all()
+        try:
+            from sqlalchemy import text
+            db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS invoice_reward_percentage FLOAT DEFAULT 0.50;"))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("DB Migration warning:", e)
+
         # Create a default admin user if none exists
         if not User.query.filter_by(email='admin@example.com').first():
             admin = User(
@@ -33,6 +41,7 @@ def create_app(config_class=Config):
             # Create a default configuration (Version 1)
             default_config = Configuration(
                 version=1,
+                invoice_reward_percentage=0.50,
                 credit_period=7,
                 forfeiture_cutoff=30,
                 high_spend_threshold=200000.0,

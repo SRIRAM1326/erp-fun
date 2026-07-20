@@ -41,6 +41,7 @@ export default function AdminVersionsPage() {
 
   const renderConfigGrid = (config: any) => {
     const fields = [
+      { label: 'Invoice to Points %', value: `${((config.invoice_reward_percentage ?? 0.50) * 100).toFixed(1)}%` },
       { label: 'Credit Period', value: `${config.credit_period} Days` },
       { label: 'Payment Cutoff', value: `${config.forfeiture_cutoff} Days` },
       { label: 'High-Spend Threshold', value: `₹${config.high_spend_threshold.toLocaleString()}` },
