@@ -21,6 +21,8 @@ def create_app(config_class=Config):
         try:
             from sqlalchemy import text
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS invoice_reward_percentage FLOAT DEFAULT 0.50;"))
+            db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_consecutive_months INTEGER DEFAULT 3;"))
+            db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_min_monthly_purchase FLOAT DEFAULT 200000.0;"))
             db.session.commit()
         except Exception as e:
             db.session.rollback()
@@ -46,7 +48,9 @@ def create_app(config_class=Config):
                 forfeiture_cutoff=30,
                 high_spend_threshold=200000.0,
                 high_spend_bonus=500,
-                loyalty_bonus=250,
+                loyalty_consecutive_months=3,
+                loyalty_min_monthly_purchase=200000.0,
+                loyalty_bonus=10000,
                 regular_bonus=150,
                 special_bonus=300,
                 old_stock_bonus=500,

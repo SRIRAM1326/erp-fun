@@ -46,12 +46,13 @@ export default function AdminVersionsPage() {
       { label: 'Payment Cutoff', value: `${config.forfeiture_cutoff} Days` },
       { label: 'High-Spend Threshold', value: `₹${config.high_spend_threshold.toLocaleString()}` },
       { label: 'High-Spend Bonus', value: `${config.high_spend_bonus} pts` },
-      { label: 'Loyalty Bonus', value: `${config.loyalty_bonus} pts` },
+      { label: 'Consecutive Months Required', value: `${config.loyalty_consecutive_months ?? 3} Months` },
+      { label: 'Loyalty Min Monthly Purchase', value: `₹${(config.loyalty_min_monthly_purchase ?? 200000).toLocaleString()}` },
+      { label: 'Loyalty Bonus Points', value: `${config.loyalty_bonus ?? 10000} pts` },
       { label: 'Regular Bonus', value: `${config.regular_bonus} pts` },
       { label: 'Special Product Bonus', value: `${config.special_bonus} pts` },
       { label: 'Old Stock Bonus', value: `${config.old_stock_bonus} pts` },
-      { label: 'Referral Min Purchase', value: `₹${config.referral_min_value.toLocaleString()}` },
-      { label: 'Referral Reward Rate', value: `${(config.referral_rate * 100).toFixed(1)}%` },
+      { label: 'Rep Commission Rate', value: `${(config.referral_rate * 100).toFixed(1)}%` },
       { label: 'Shop Onboard Bonus', value: `${config.shop_onboard_bonus} pts` },
     ];
 

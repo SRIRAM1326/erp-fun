@@ -146,7 +146,7 @@ export default function AdminReps() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Marketing Representative Oversight</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage reps, track referral performance, and monitor earnings in real time.</p>
+          <p className="text-sm text-slate-500 mt-1">Manage reps, track sales performance, and monitor earnings in real time.</p>
         </div>
         <div className="flex gap-2">
           <button onClick={fetchReps} className="bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 flex items-center gap-2 shadow-sm">
@@ -185,7 +185,7 @@ export default function AdminReps() {
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <div>
             <h3 className="font-bold text-slate-900">Registered Representatives</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Click any row to view their invoice details and referral audit trail.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Click any row to view their invoice details and sales audit trail.</p>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ export default function AdminReps() {
 
                             {/* Info note */}
                             <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5 text-xs text-blue-800 font-medium">
-                              <strong>Pending points</strong> = 1% referral reward waiting for customer payment confirmation. &nbsp;
+                              <strong>Pending points</strong> = 1% commission reward waiting for customer payment confirmation. &nbsp;
                               <strong>Credited points</strong> = rewards already approved and issued after invoice payment.
                             </div>
 

@@ -12,7 +12,7 @@ const SOURCE_LABELS: Record<string, { label: string; color: string; bg: string }
   invoice_payment:    { label: 'Invoice Payment',    color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-100' },
   sales_commission:   { label: 'Rep Commission',     color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-100' },
   onboarding_bonus:   { label: 'Onboarding Bonus',   color: 'text-teal-700',    bg: 'bg-teal-50 border-teal-100' },
-  referral_bonus:     { label: 'Referral Bonus',     color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-100' },
+  referral_bonus:     { label: 'Rep Bonus',          color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-100' },
   redemption:         { label: 'Redemption Payout',  color: 'text-rose-700',    bg: 'bg-rose-50 border-rose-100' },
   redemption_refund:  { label: 'Redemption Refund',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-100' },
   scan:               { label: 'QR Scan',            color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-100' },
@@ -322,7 +322,7 @@ export default function AdminAuditLogs() {
             <option value="invoice_payment">Invoice Payments</option>
             <option value="sales_commission">Rep Commissions</option>
             <option value="onboarding_bonus">Onboarding Bonus</option>
-            <option value="referral_bonus">Referral Bonus</option>
+            <option value="referral_bonus">Rep Bonus</option>
             <option value="redemption">Redemption Payouts</option>
             <option value="redemption_refund">Redemption Refunds</option>
           </select>

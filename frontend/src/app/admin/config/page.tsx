@@ -79,17 +79,35 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
     ],
   },
   {
-    title: 'Loyalty Tier Bonuses',
-    desc: 'Additional flat bonus points awarded to customers based on their loyalty tier standing.',
+    title: 'Loyalty Tier Variable (Consecutive Monthly Purchase)',
+    desc: 'Defines consecutive months requirement, minimum monthly purchase amount, and loyalty bonus points awarded.',
     fields: [
       {
+        key: 'loyalty_consecutive_months',
+        label: 'Consecutive Months Required',
+        description: 'Number of consecutive months a customer must meet the minimum purchase requirement to qualify for a loyalty reward (e.g. 3, 6, or 12 months).',
+        type: 'number',
+        suffix: 'Months',
+        icon: Clock,
+        usedIn: ['Customer Portal', 'Admin Portal'],
+      },
+      {
+        key: 'loyalty_min_monthly_purchase',
+        label: 'Minimum Monthly Purchase Amount',
+        description: 'Minimum required paid purchase amount per month during the consecutive period (e.g., ₹2,00,000).',
+        type: 'number',
+        prefix: '₹',
+        icon: TrendingUp,
+        usedIn: ['Customer Portal', 'Admin Portal'],
+      },
+      {
         key: 'loyalty_bonus',
-        label: 'Loyalty Tier Bonus',
-        description: 'Bonus points awarded to buyers in the loyalty tier (e.g. consistent repeat purchasers).',
+        label: 'Loyalty Bonus Points Awarded',
+        description: 'Configured loyalty bonus points awarded when the customer completes the required purchases for the specified consecutive months (e.g. 10,000 Points).',
         type: 'number',
         suffix: 'pts',
-        icon: CreditCard,
-        usedIn: ['Customer Portal'],
+        icon: Gift,
+        usedIn: ['Customer Portal', 'Admin Portal'],
       },
       {
         key: 'regular_bonus',
@@ -127,21 +145,12 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
     ],
   },
   {
-    title: 'Referral & Marketing Rep Settings',
-    desc: 'Controls the minimum invoice value for rep commission eligibility and the commission rate applied.',
+    title: 'Marketing Rep & Commission Settings',
+    desc: 'Controls the commission rate applied and onboarding bonus for marketing representatives.',
     fields: [
       {
-        key: 'referral_min_value',
-        label: 'Minimum Purchase Amount for Referral',
-        description: "A Marketing Representative's referred invoice must be equal to or above this value for the rep to earn commission points.",
-        type: 'number',
-        prefix: '₹',
-        icon: Users,
-        usedIn: ['Customer Portal', 'Rep Portal', 'Admin Portal'],
-      },
-      {
         key: 'referral_rate',
-        label: 'Referral Reward Rate',
+        label: 'Rep Commission Rate',
         description: 'Percentage of the invoice amount awarded as commission points to the Marketing Representative (e.g. 0.01 = 1%).',
         type: 'percent',
         step: '0.001',
@@ -151,7 +160,7 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
       {
         key: 'shop_onboard_bonus',
         label: 'Shop Onboarding Bonus',
-        description: 'One-time bonus points awarded to a Marketing Representative when a shop they referred is verified by the Admin.',
+        description: 'One-time bonus points awarded to a Marketing Representative when a shop assigned to them is verified by the Admin.',
         type: 'number',
         suffix: 'pts',
         icon: Store,
@@ -294,7 +303,7 @@ export default function AdminRewardConfigPage() {
             <span>Reward Rules</span>
           </h1>
           <p className="text-sm text-slate-500 font-medium mt-1">
-            Global multipliers, credit period decay rates, referral limits, and loyalty tier incentives.
+            Global multipliers, credit period decay rates, rep commission limits, and loyalty tier incentives.
           </p>
         </div>
         <button 
@@ -497,7 +506,7 @@ export default function AdminRewardConfigPage() {
                 {activeTab === 4 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
-                      Slide to simulate an invoice value and calculate representative referral commission.
+                      Slide to simulate an invoice value and calculate representative sales commission.
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between font-mono font-bold">
@@ -506,32 +515,77 @@ export default function AdminRewardConfigPage() {
                       </div>
                       <input
                         type="range"
-                        min="0"
-                        max="50000"
+                        min="1000"
+                        max="100000"
                         step="1000"
                         value={simInvoiceVal}
                         onChange={(e) => setSimInvoiceVal(parseInt(e.target.value))}
                         className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
                       />
                       <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
-                        <span>₹0</span>
-                        <span>₹{(referralMinVal/1000).toFixed(0)}k (min value)</span>
+                        <span>₹1k</span>
                         <span>₹50k</span>
+                        <span>₹100k</span>
                       </div>
                     </div>
                     
                     <div className="bg-slate-950 p-4 rounded-xl text-center border border-slate-850">
-                      {simInvoiceVal >= referralMinVal ? (
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Rep Commission Calculated</p>
+                        <p className="text-3xl font-black text-white">+{Math.round(simInvoiceVal * referralRate).toLocaleString()} pts</p>
+                        <span className="text-[9px] text-slate-500 font-semibold">Calculated at commission rate of {(referralRate*100).toFixed(1)}%.</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2 Simulator (Loyalty Tier Variable - Consecutive Monthly Purchase) */}
+                {activeTab === 2 && (
+                  <div className="space-y-4 text-xs">
+                    <p className="text-slate-400 leading-normal">
+                      Slide to simulate a buyer's average monthly purchase spend across consecutive months.
+                    </p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between font-mono font-bold">
+                        <span className="text-slate-400">Monthly Spend:</span>
+                        <span className="text-amber-400">₹{simMonthlySpend.toLocaleString()}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="50000"
+                        max="500000"
+                        step="10000"
+                        value={simMonthlySpend}
+                        onChange={(e) => setSimMonthlySpend(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                      />
+                      <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
+                        <span>₹50k</span>
+                        <span>₹{((config?.loyalty_min_monthly_purchase ?? 200000)/1000).toFixed(0)}k (min req)</span>
+                        <span>₹500k</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-slate-950 p-4 rounded-xl text-center border border-slate-850">
+                      {simMonthlySpend >= (config?.loyalty_min_monthly_purchase ?? 200000) ? (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Rep Comm. Qualified</p>
-                          <p className="text-3xl font-black text-white">+{Math.round(simInvoiceVal * referralRate)} pts</p>
-                          <span className="text-[9px] text-slate-500 font-semibold">Calculated at commission rate of {(referralRate*100).toFixed(1)}%.</span>
+                          <p className="text-[10px] text-amber-400 uppercase tracking-widest font-black flex items-center justify-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5" /> {config?.loyalty_consecutive_months ?? 3}-Month Loyalty Streak Qualified!
+                          </p>
+                          <p className="text-3xl font-black text-white">+{(config?.loyalty_bonus ?? 10000).toLocaleString()} pts</p>
+                          <span className="text-[9px] text-slate-500 font-semibold block">
+                            Purchases meet/exceed ₹{(config?.loyalty_min_monthly_purchase ?? 200000).toLocaleString()} for {config?.loyalty_consecutive_months ?? 3} consecutive months.
+                          </span>
                         </div>
                       ) : (
                         <div className="space-y-1">
-                          <p className="text-[10px] text-rose-500 uppercase tracking-widest font-bold">Below Referral Min Amount</p>
-                          <p className="text-3xl font-black text-slate-600">₹0</p>
-                          <span className="text-[9px] text-slate-500 font-semibold">Commission locks below invoice value of ₹{referralMinVal.toLocaleString()}.</span>
+                          <p className="text-[10px] text-rose-400 uppercase tracking-widest font-bold">Streak Requirement Not Met</p>
+                          <p className="text-lg font-bold text-slate-400">
+                            ₹{((config?.loyalty_min_monthly_purchase ?? 200000) - simMonthlySpend).toLocaleString()} more spend needed / mo
+                          </p>
+                          <span className="text-[9px] text-slate-500 font-semibold block">
+                            Requires ₹{(config?.loyalty_min_monthly_purchase ?? 200000).toLocaleString()} / month for {config?.loyalty_consecutive_months ?? 3} consecutive months to unlock +{(config?.loyalty_bonus ?? 10000).toLocaleString()} pts.
+                          </span>
                         </div>
                       )}
                     </div>
@@ -539,7 +593,7 @@ export default function AdminRewardConfigPage() {
                 )}
 
                 {/* Default Fallback for other tabs */}
-                {(activeTab === 2 || activeTab === 3) && (
+                {activeTab === 3 && (
                   <div className="space-y-3 text-xs text-center py-4">
                     <HelpCircle className="w-8 h-8 text-slate-600 mx-auto" />
                     <p className="text-slate-400 leading-normal">

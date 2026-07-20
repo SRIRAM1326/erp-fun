@@ -24,7 +24,7 @@ export default function AdminBuyersPage() {
   }, []);
 
   const handleVerifyBuyer = async (id: number) => {
-    if (!confirm('Verify this store? This will approve their loyalty account and award a flat +1,000 points onboarding bonus to their referring representative.')) {
+    if (!confirm('Verify this store? This will approve their loyalty account and award a flat +1,000 points onboarding bonus to their assigned representative.')) {
       return;
     }
     try {

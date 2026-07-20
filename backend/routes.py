@@ -625,6 +625,9 @@ def admin_pay_invoice(id):
             created_at=datetime.utcnow()
         ))
         
+        # Check and award Loyalty Tier streak bonus if consecutive monthly purchase criteria is met
+        check_and_award_loyalty_streak_bonus(buyer, config)
+        
     # Representative Commission
     if rep_points > 0 and inv.rep_id:
         rep = User.query.get(inv.rep_id)
@@ -1353,6 +1356,7 @@ def admin_upload_invoices():
                         ))
                         
                 db.session.commit()
+                check_and_award_loyalty_streak_bonus(buyer, config)
                 
             count += 1
             
@@ -1429,6 +1433,75 @@ def calculate_invoice_points(inv, config):
             
     return buyer_points, rep_points, ", ".join(rules)
 
+def check_and_award_loyalty_streak_bonus(buyer, config):
+    """
+    Checks if a buyer has purchased >= loyalty_min_monthly_purchase in 
+    loyalty_consecutive_months consecutive calendar months. If qualified and 
+    not already awarded for the period, credits loyalty_bonus points.
+    """
+    if not buyer or not config:
+        return False, 0
+
+    req_months = getattr(config, 'loyalty_consecutive_months', 3) or 3
+    min_spend = getattr(config, 'loyalty_min_monthly_purchase', 200000.0) or 200000.0
+    bonus_pts = getattr(config, 'loyalty_bonus', 10000) or 10000
+
+    if req_months <= 0 or min_spend <= 0 or bonus_pts <= 0:
+        return False, 0
+
+    paid_invoices = Invoice.query.filter_by(buyer_id=buyer.id, status='paid').all()
+    if not paid_invoices:
+        return False, 0
+
+    monthly_totals = {}
+    for inv in paid_invoices:
+        dt = inv.paid_at or inv.created_at
+        if dt:
+            month_key = dt.strftime('%Y-%m')
+            monthly_totals[month_key] = monthly_totals.get(month_key, 0.0) + inv.amount
+
+    qualified_months = sorted([m for m, total in monthly_totals.items() if total >= min_spend])
+    if len(qualified_months) < req_months:
+        return False, 0
+
+    def month_to_num(m_str):
+        y, m = map(int, m_str.split('-'))
+        return y * 12 + m
+
+    month_nums = [month_to_num(m) for m in qualified_months]
+    current_streak = 1
+    for i in range(len(month_nums) - 1, 0, -1):
+        if month_nums[i] - month_nums[i - 1] == 1:
+            current_streak += 1
+        else:
+            break
+
+    if current_streak >= req_months:
+        latest_month_str = qualified_months[-1]
+        streak_tag = f"loyalty_streak_{latest_month_str}"
+        
+        existing_txn = PointsTransaction.query.filter_by(
+            buyer_id=buyer.id,
+            source='loyalty_streak_bonus',
+            invoice_number=streak_tag
+        ).first()
+        
+        if not existing_txn:
+            buyer.total_points += bonus_pts
+            db.session.add(PointsTransaction(
+                buyer_id=buyer.id,
+                points=bonus_pts,
+                transaction_type='credit',
+                source='loyalty_streak_bonus',
+                invoice_number=streak_tag,
+                rule_applied=f"BR-05 (Consecutive {req_months} Months Purchase Loyalty Bonus +{bonus_pts} pts)"[:100],
+                created_at=datetime.utcnow()
+            ))
+            db.session.commit()
+            return True, bonus_pts
+
+    return False, 0
+
 # ==================== CONFIGURATION & VERSIONING APIS ====================
 
 @api.route('/admin/config', methods=['GET'])
@@ -1456,7 +1529,9 @@ def admin_get_config():
         'forfeiture_cutoff': config.forfeiture_cutoff,
         'high_spend_threshold': config.high_spend_threshold,
         'high_spend_bonus': config.high_spend_bonus,
-        'loyalty_bonus': config.loyalty_bonus,
+        'loyalty_consecutive_months': getattr(config, 'loyalty_consecutive_months', 3) or 3,
+        'loyalty_min_monthly_purchase': getattr(config, 'loyalty_min_monthly_purchase', 200000.0) or 200000.0,
+        'loyalty_bonus': config.loyalty_bonus if config.loyalty_bonus is not None else 10000,
         'regular_bonus': config.regular_bonus,
         'special_bonus': config.special_bonus,
         'old_stock_bonus': config.old_stock_bonus,
@@ -1488,7 +1563,9 @@ def admin_get_config_versions():
             'forfeiture_cutoff': c.forfeiture_cutoff,
             'high_spend_threshold': c.high_spend_threshold,
             'high_spend_bonus': c.high_spend_bonus,
-            'loyalty_bonus': c.loyalty_bonus,
+            'loyalty_consecutive_months': getattr(c, 'loyalty_consecutive_months', 3) or 3,
+            'loyalty_min_monthly_purchase': getattr(c, 'loyalty_min_monthly_purchase', 200000.0) or 200000.0,
+            'loyalty_bonus': c.loyalty_bonus if c.loyalty_bonus is not None else 10000,
             'regular_bonus': c.regular_bonus,
             'special_bonus': c.special_bonus,
             'old_stock_bonus': c.old_stock_bonus,
@@ -1521,7 +1598,9 @@ def admin_post_config():
         forfeiture_cutoff=int(data.get('forfeiture_cutoff', 30)),
         high_spend_threshold=float(data.get('high_spend_threshold', 200000.0)),
         high_spend_bonus=int(data.get('high_spend_bonus', 500)),
-        loyalty_bonus=int(data.get('loyalty_bonus', 250)),
+        loyalty_consecutive_months=int(data.get('loyalty_consecutive_months', 3)),
+        loyalty_min_monthly_purchase=float(data.get('loyalty_min_monthly_purchase', 200000.0)),
+        loyalty_bonus=int(data.get('loyalty_bonus', 10000)),
         regular_bonus=int(data.get('regular_bonus', 150)),
         special_bonus=int(data.get('special_bonus', 300)),
         old_stock_bonus=int(data.get('old_stock_bonus', 500)),
