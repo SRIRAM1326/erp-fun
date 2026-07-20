@@ -1685,13 +1685,13 @@ def admin_upload_invoices():
             cust_key = customer.lower().strip()
             buyer = buyer_lookup.get(cust_key)
             if not buyer:
-                clean_name = customer.lower().replace(' ', '')
-                email = f"{clean_name}@example.com"
-                buyer = buyer_lookup.get(email)
+                clean_name = ''.join(c for c in customer.lower() if c.isalnum())
+                email = f"buyer_{clean_name[:40]}@example.com" if clean_name else f"buyer_{uuid.uuid4().hex[:8]}@example.com"
+                buyer = buyer_lookup.get(email) or User.query.filter_by(email=email).first()
                 if not buyer:
                     import uuid
                     ref_code = f"REF-BUYER-{uuid.uuid4().hex[:8].upper()}"
-                    while ref_code in existing_referral_codes:
+                    while ref_code in existing_referral_codes or User.query.filter_by(referral_code=ref_code).first():
                         ref_code = f"REF-BUYER-{uuid.uuid4().hex[:8].upper()}"
                     existing_referral_codes.add(ref_code)
 
@@ -1705,8 +1705,24 @@ def admin_upload_invoices():
                         is_verified=True,
                         verification_status='verified'
                     )
-                    db.session.add(buyer)
-                    db.session.commit()
+                    try:
+                        db.session.add(buyer)
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                        email = f"buyer_{uuid.uuid4().hex[:8]}@example.com"
+                        buyer = User(
+                            name=customer,
+                            email=email,
+                            password_hash=generate_password_hash('buyer123'),
+                            role='buyer',
+                            business_name=f"{customer} Store",
+                            referral_code=f"REF-BUYER-{uuid.uuid4().hex[:8].upper()}",
+                            is_verified=True,
+                            verification_status='verified'
+                        )
+                        db.session.add(buyer)
+                        db.session.commit()
                 buyer_lookup[cust_key] = buyer
                 buyer_lookup[buyer.email.lower()] = buyer
             
@@ -1715,13 +1731,13 @@ def admin_upload_invoices():
                 rep_key = salesman.lower().strip()
                 rep = rep_lookup.get(rep_key)
                 if not rep:
-                    clean_rep_name = salesman.lower().replace(' ', '')
-                    rep_email = f"{clean_rep_name}@sales.com"
-                    rep = rep_lookup.get(rep_email)
+                    clean_rep_name = ''.join(c for c in salesman.lower() if c.isalnum())
+                    rep_email = f"rep_{clean_rep_name[:40]}@sales.com" if clean_rep_name else f"rep_{uuid.uuid4().hex[:8]}@sales.com"
+                    rep = rep_lookup.get(rep_email) or User.query.filter_by(email=rep_email).first()
                     if not rep:
                         import uuid
                         ref_code = f"REF-REP-{uuid.uuid4().hex[:8].upper()}"
-                        while ref_code in existing_referral_codes:
+                        while ref_code in existing_referral_codes or User.query.filter_by(referral_code=ref_code).first():
                             ref_code = f"REF-REP-{uuid.uuid4().hex[:8].upper()}"
                         existing_referral_codes.add(ref_code)
 
@@ -1734,8 +1750,23 @@ def admin_upload_invoices():
                             is_verified=True,
                             verification_status='verified'
                         )
-                        db.session.add(rep)
-                        db.session.commit()
+                        try:
+                            db.session.add(rep)
+                            db.session.commit()
+                        except Exception:
+                            db.session.rollback()
+                            rep_email = f"rep_{uuid.uuid4().hex[:8]}@sales.com"
+                            rep = User(
+                                name=salesman,
+                                email=rep_email,
+                                password_hash=generate_password_hash('rep123'),
+                                role='rep',
+                                referral_code=f"REF-REP-{uuid.uuid4().hex[:8].upper()}",
+                                is_verified=True,
+                                verification_status='verified'
+                            )
+                            db.session.add(rep)
+                            db.session.commit()
                     rep_lookup[rep_key] = rep
                     rep_lookup[rep.email.lower()] = rep
                 rep_id = rep.id
