@@ -34,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard, color: 'text-blue-400' },
     { name: 'Customers', href: '/admin/buyers', icon: Users, color: 'text-emerald-400' },
-    { name: 'Marketing Representatives', href: '/admin/reps', icon: Award, color: 'text-violet-400' },
+    { name: 'Sales Partners', href: '/admin/reps', icon: Award, color: 'text-violet-400' },
     { name: 'Invoices', href: '/admin/invoices', icon: FileText, color: 'text-amber-400' },
     { name: 'Product Tagging', href: '/admin/products', icon: Tag, color: 'text-rose-400' },
     { name: 'Redemptions', href: '/admin/redemptions', icon: Wallet, color: 'text-cyan-400' },

@@ -2,7 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from config import Config
-from models import db, User, Campaign, Invoice, Redemption, Configuration, Product
+from models import db, User, Campaign, Invoice, Redemption, Configuration, Product, TagType
 from routes import api
 from werkzeug.security import generate_password_hash
 
@@ -28,10 +28,29 @@ def create_app(config_class=Config):
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT '0';"))
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS state VARCHAR(100) DEFAULT '0';"))
             db.session.execute(text("ALTER TABLE \"user\" ALTER COLUMN phone TYPE VARCHAR(100);"))
+            
+            # Product tag migrations
+            db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS tag_description VARCHAR(255);"))
+            db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS recipient_customer BOOLEAN DEFAULT TRUE;"))
+            db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS recipient_rep BOOLEAN DEFAULT FALSE;"))
             db.session.commit()
         except Exception as e:
             db.session.rollback()
             print("DB Migration warning:", e)
+
+        # Seed default TagTypes if table is empty
+        try:
+            if TagType.query.count() == 0:
+                default_tags = [
+                    TagType(title='Special', description='Fixed bonus on every invoice', points=300, recipient_customer=True, recipient_rep=False),
+                    TagType(title='Old Stock', description='Higher bonus to move aging inventory', points=500, recipient_customer=True, recipient_rep=False),
+                    TagType(title='Double Points', description='2× multiplier on base buyer points', points=0, recipient_customer=True, recipient_rep=False),
+                ]
+                db.session.add_all(default_tags)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print("TagType seeding warning:", e)
 
         # Create a default admin user if none exists
         if not User.query.filter_by(email='admin@example.com').first():

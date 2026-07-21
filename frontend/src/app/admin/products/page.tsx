@@ -6,18 +6,19 @@ import {
   Tag, Plus, Edit2, Trash2, RefreshCw, X, Info,
   PackageCheck, Zap, Archive, Star, Box, TrendingUp,
   ShoppingCart, LayoutGrid, List, BarChart3, Award,
-  ChevronDown, ChevronRight, Search
+  ChevronDown, ChevronRight, Search, Users, Check
 } from 'lucide-react';
 
-const TAG_OPTIONS = [
-  { value: 'normal',        label: 'Normal',        desc: 'No bonus points',                       color: 'text-slate-600',   bg: 'bg-slate-100 border-slate-200',   dot: 'bg-slate-300',     icon: Box },
-  { value: 'special',       label: 'Special',       desc: 'Fixed bonus on every invoice',          color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',      dot: 'bg-blue-500',      icon: Star },
-  { value: 'old_stock',     label: 'Old Stock',     desc: 'Higher bonus to move aging inventory',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',    dot: 'bg-amber-500',     icon: Archive },
-  { value: 'double_points', label: 'Double Points', desc: '2× multiplier on base buyer points',    color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200',  dot: 'bg-purple-500',    icon: Zap },
-];
-
-const getTag = (val: string) => TAG_OPTIONS.find((t) => t.value === val) || TAG_OPTIONS[0];
-const EMPTY_FORM = { name: '', tag: 'special', bonus_points: 300, category: '', brand: '' };
+const EMPTY_FORM = {
+  name: '',
+  tag: 'Special',
+  tag_description: 'Fixed bonus on every invoice',
+  bonus_points: 300,
+  recipient_customer: true,
+  recipient_rep: false,
+  category: '',
+  brand: ''
+};
 
 type ViewMode = 'sales' | 'brandwise' | 'categorywise' | 'productwise';
 
@@ -30,6 +31,7 @@ const VIEW_TABS: { id: ViewMode; label: string; icon: any }[] = [
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
+  const [tagTypes, setTagTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
@@ -46,8 +48,12 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/products');
-      setProducts(res.data);
+      const [resProd, resTags] = await Promise.all([
+        api.get('/admin/products'),
+        api.get('/admin/tag-types')
+      ]);
+      setProducts(resProd.data);
+      setTagTypes(resTags.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -69,15 +75,42 @@ export default function AdminProductsPage() {
 
   const openEdit = (p: any) => {
     setEditingProduct(p);
-    setFormData({ name: p.name, tag: p.tag, bonus_points: p.bonus_points, category: p.category || '', brand: p.brand || '' });
+    setFormData({
+      name: p.name,
+      tag: p.tag || 'Special',
+      tag_description: p.tag_description || '',
+      bonus_points: p.bonus_points ?? 300,
+      recipient_customer: p.recipient_customer ?? true,
+      recipient_rep: p.recipient_rep ?? false,
+      category: p.category || '',
+      brand: p.brand || ''
+    });
     setFormError('');
     setShowModal(true);
+  };
+
+  const selectTagPreset = (tt: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      tag: tt.title,
+      tag_description: tt.description || '',
+      bonus_points: tt.points ?? 0,
+      recipient_customer: tt.recipient_customer ?? true,
+      recipient_rep: tt.recipient_rep ?? false
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError('');
+
+    if (!formData.recipient_customer && !formData.recipient_rep && formData.tag.toLowerCase() !== 'normal') {
+      setFormError('Please select at least one Point Recipient (Customer or Sales Partner).');
+      setFormLoading(false);
+      return;
+    }
+
     try {
       await api.post('/admin/products', formData);
       setShowModal(false);
@@ -108,15 +141,16 @@ export default function AdminProductsPage() {
 
   // Base filtered list
   const filtered = useMemo(() => products.filter((p) => {
-    const matchesTag = filterTag ? p.tag === filterTag : true;
+    const matchesTag = filterTag ? (p.tag || '').toLowerCase() === filterTag.toLowerCase() : true;
     const matchesSearch = searchTerm
       ? p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.category || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (p.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.tag || '').toLowerCase().includes(searchTerm.toLowerCase())
       : true;
     return matchesTag && matchesSearch;
   }), [products, filterTag, searchTerm]);
 
-  // Grouped by brand (brand field from database)
+  // Grouped by brand
   const groupedByBrand = useMemo(() => {
     const map: Record<string, any[]> = {};
     filtered.forEach(p => {
@@ -127,7 +161,7 @@ export default function AdminProductsPage() {
     return Object.entries(map).sort((a, b) => b[1].length - a[1].length);
   }, [filtered]);
 
-  // Grouped by category (category field from database)
+  // Grouped by category
   const groupedByCategory = useMemo(() => {
     const map: Record<string, any[]> = {};
     filtered.forEach(p => {
@@ -138,52 +172,72 @@ export default function AdminProductsPage() {
     return Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]));
   }, [filtered]);
 
-  // Sorted by invoices this month (sales view)
+  // Sorted by sales
   const sortedBySales = useMemo(() =>
     [...filtered].sort((a, b) => (b.invoices_this_month ?? 0) - (a.invoices_this_month ?? 0)),
     [filtered]
   );
 
   // Summary counts
-  const taggedCount = products.filter((p) => p.tag !== 'normal').length;
+  const taggedCount = products.filter((p) => (p.tag || '').toLowerCase() !== 'normal').length;
   const brandCount = new Set(products.map(p => p.brand).filter(Boolean)).size;
   const categoryCount = new Set(products.map(p => p.category).filter(Boolean)).size;
-  const specialCount = products.filter((p) => p.tag === 'special').length;
-  const oldStockCount = products.filter((p) => p.tag === 'old_stock').length;
 
-  // Pagination for productwise / sales views
+  // Pagination for flat views
   const totalPages = Math.ceil(
     (viewMode === 'productwise' ? filtered : sortedBySales).length / itemsPerPage
   );
   const paginatedFlat = (viewMode === 'productwise' ? filtered : sortedBySales)
     .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const tagBadge = (tag: string) => {
-    const t = getTag(tag);
+  const tagBadge = (product: any) => {
+    const isNormal = !product.tag || product.tag.toLowerCase() === 'normal';
+    if (isNormal) {
+      return (
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-slate-100 border-slate-200 text-slate-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-slate-400" /> Normal
+        </span>
+      );
+    }
+
+    const recCust = product.recipient_customer ?? true;
+    const recRep = product.recipient_rep ?? false;
+
+    let recBadge = 'Customer';
+    let recBg = 'bg-blue-50 text-blue-700 border-blue-200';
+    if (recCust && recRep) {
+      recBadge = 'Cust & Partner';
+      recBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    } else if (recRep) {
+      recBadge = 'Sales Partner';
+      recBg = 'bg-purple-50 text-purple-700 border-purple-200';
+    }
+
     return (
-      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${t.bg} ${t.color}`}>
-        <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
-        {t.label}
-      </span>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-blue-50 border-blue-200 text-blue-800">
+          <Tag className="w-2.5 h-2.5 text-blue-600" />
+          {product.tag}
+        </span>
+        <span className={`inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${recBg}`}>
+          {recBadge}
+        </span>
+      </div>
     );
   };
 
   const renderProductCard = (product: any) => {
-    const tag = getTag(product.tag);
-    const TagIcon = tag.icon;
-    const isBonus = product.tag !== 'normal';
+    const isNormal = !product.tag || product.tag.toLowerCase() === 'normal';
+    const isDouble = (product.tag || '').toLowerCase() === 'double_points';
+
     return (
       <div key={product.id} className={`bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-3 transition-all hover:shadow-md hover:-translate-y-0.5 ${
-        isBonus ? 'border-l-4 ' + (
-          product.tag === 'special'       ? 'border-l-blue-500' :
-          product.tag === 'old_stock'     ? 'border-l-amber-500' :
-          product.tag === 'double_points' ? 'border-l-purple-500' : 'border-l-slate-200'
-        ) : 'border-slate-200'}`}
-      >
+        !isNormal ? 'border-l-4 border-l-blue-500' : 'border-slate-200'
+      }`}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-start gap-2 min-w-0">
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${tag.bg}`}>
-              <TagIcon className={`w-3.5 h-3.5 ${tag.color}`} />
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${!isNormal ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-slate-100 border-slate-200 text-slate-400'}`}>
+              <Tag className="w-3.5 h-3.5" />
             </div>
             <div className="min-w-0">
               <p className="font-semibold text-slate-900 text-xs leading-tight line-clamp-2">{product.name}</p>
@@ -192,11 +246,11 @@ export default function AdminProductsPage() {
                 {product.brand && product.category && <span className="mx-1">·</span>}
                 {product.category && <span>{product.category}</span>}
               </p>
-              <div className="mt-1">{tagBadge(product.tag)}</div>
+              <div className="mt-1">{tagBadge(product)}</div>
             </div>
           </div>
           <div className="flex gap-1 shrink-0">
-            <button onClick={() => openEdit(product)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+            <button onClick={() => openEdit(product)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Tag">
               <Edit2 className="w-3 h-3" />
             </button>
             <button onClick={() => handleDelete(product)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Remove">
@@ -206,15 +260,15 @@ export default function AdminProductsPage() {
         </div>
         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
           <div className="text-center">
-            {product.tag === 'double_points' ? (
+            {isDouble ? (
               <>
                 <p className="text-sm font-black text-purple-700">2×</p>
                 <p className="text-[10px] text-slate-400 font-medium">Multiplier</p>
               </>
             ) : (
               <>
-                <p className={`text-sm font-black ${isBonus ? 'text-blue-700' : 'text-slate-300'}`}>
-                  {isBonus ? `+${product.bonus_points}` : '—'}
+                <p className={`text-sm font-black ${!isNormal ? 'text-blue-700' : 'text-slate-300'}`}>
+                  {!isNormal ? `+${product.bonus_points}` : '—'}
                 </p>
                 <p className="text-[10px] text-slate-400 font-medium">Bonus Pts</p>
               </>
@@ -233,7 +287,7 @@ export default function AdminProductsPage() {
     <div className="space-y-3">
       {groups.map(([groupName, groupProducts]) => {
         const isExpanded = expandedGroups.has(groupName);
-        const taggedInGroup = groupProducts.filter(p => p.tag !== 'normal').length;
+        const taggedInGroup = groupProducts.filter(p => (p.tag || '').toLowerCase() !== 'normal').length;
         const salesInGroup = groupProducts.reduce((s, p) => s + (p.invoices_this_month || 0), 0);
         return (
           <div key={groupName} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
@@ -254,18 +308,6 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 shrink-0">
-                {/* Tag breakdown mini-pills */}
-                <div className="hidden sm:flex gap-1">
-                  {TAG_OPTIONS.filter(t => t.value !== 'normal').map(t => {
-                    const cnt = groupProducts.filter(p => p.tag === t.value).length;
-                    if (!cnt) return null;
-                    return (
-                      <span key={t.value} className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${t.bg} ${t.color}`}>
-                        {cnt} {t.label}
-                      </span>
-                    );
-                  })}
-                </div>
                 {isExpanded
                   ? <ChevronDown className="w-4 h-4 text-slate-400" />
                   : <ChevronRight className="w-4 h-4 text-slate-400" />
@@ -298,7 +340,6 @@ export default function AdminProductsPage() {
               <h3 className="text-sm font-bold text-slate-700">Active Products (This Month)</h3>
               <span className="text-xs text-slate-400 font-medium">— {topSellers.length} products with sales</span>
             </div>
-            {/* Top sales table */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
               <table className="w-full">
                 <thead>
@@ -330,7 +371,7 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <span className="text-xs text-slate-500">{p.brand || '—'}</span>
                       </td>
-                      <td className="px-4 py-3">{tagBadge(p.tag)}</td>
+                      <td className="px-4 py-3">{tagBadge(p)}</td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm font-black text-emerald-700">{p.invoices_this_month}</span>
                       </td>
@@ -372,7 +413,7 @@ export default function AdminProductsPage() {
                       <td className="px-4 py-3 hidden sm:table-cell">
                         <span className="text-xs text-slate-400">{p.brand || '—'}</span>
                       </td>
-                      <td className="px-4 py-3">{tagBadge(p.tag)}</td>
+                      <td className="px-4 py-3">{tagBadge(p)}</td>
                       <td className="px-4 py-3 text-right">
                         <button onClick={() => openEdit(p)} className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex">
                           <Edit2 className="w-3.5 h-3.5" />
@@ -402,7 +443,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Product Tagging</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Assign bonus reward points to products. Browse by Category, Brand, Product, or Sales Report.
+            Assign custom bonus reward points and recipient distribution rules to products.
           </p>
         </div>
         <div className="flex gap-2">
@@ -420,17 +461,17 @@ export default function AdminProductsPage() {
         {[
           { label: 'Total Products', value: products.length, icon: Box, color: 'text-slate-700', bg: 'bg-slate-100' },
           { label: 'Brands / Categories', value: `${brandCount} / ${categoryCount}`, icon: Award, color: 'text-indigo-700', bg: 'bg-indigo-50' },
-          { label: 'Special / Old Stock', value: `${specialCount} / ${oldStockCount}`, icon: Star, color: 'text-amber-700', bg: 'bg-amber-50' },
+          { label: 'Tagged Products', value: taggedCount, icon: Star, color: 'text-amber-700', bg: 'bg-amber-50' },
         ].map((card) => {
           const Icon = card.icon;
           return (
-            <div key={card.label} className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-sm flex items-center gap-3">
-              <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
-                <Icon className={`w-3.5 h-3.5 ${card.color}`} />
+            <div key={card.label} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm flex items-center gap-3">
+              <div className={`w-8 h-8 rounded-lg ${card.bg} flex items-center justify-center shrink-0`}>
+                <Icon className={`w-4 h-4 ${card.color}`} />
               </div>
               <div>
-                <p className="text-sm font-bold text-slate-900 leading-none">{card.value}</p>
-                <p className="text-[10px] text-slate-500 font-medium mt-1 leading-none">{card.label}</p>
+                <p className="text-lg font-bold text-slate-900 leading-none">{card.value}</p>
+                <p className="text-[11px] text-slate-500 font-medium mt-1 leading-none">{card.label}</p>
               </div>
             </div>
           );
@@ -461,13 +502,13 @@ export default function AdminProductsPage() {
           })}
         </div>
 
-        {/* Search + Tag Filter Row */}
+        {/* Search Bar */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search products or brands..."
+              placeholder="Search products, brands, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
@@ -486,7 +527,7 @@ export default function AdminProductsPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center shadow-sm">
           <Tag className="w-10 h-10 text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 font-medium">No products found.</p>
-          <p className="text-sm text-slate-400 mt-1">Try modifying your search or filter settings.</p>
+          <p className="text-sm text-slate-400 mt-1">Try modifying your search query.</p>
         </div>
       ) : (
         <>
@@ -573,12 +614,12 @@ export default function AdminProductsPage() {
       {/* Add / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-lg font-bold text-slate-900">{editingProduct ? 'Edit Product Tag' : 'Tag a Product'}</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {editingProduct ? 'Update the bonus configuration for this product.' : 'Assign a bonus tag to a product. Applies to all future invoices containing it.'}
+                  Configure custom tag type, points, and recipient distribution rules.
                 </p>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
@@ -586,7 +627,7 @@ export default function AdminProductsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
               {formError && (
                 <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium px-4 py-2.5 rounded-lg">{formError}</div>
               )}
@@ -600,7 +641,7 @@ export default function AdminProductsPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Havells 1200mm Fan"
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-50 disabled:text-slate-500"
                 />
                 {editingProduct && <p className="text-[10px] text-slate-400 mt-1">Product name cannot be changed after creation.</p>}
               </div>
@@ -613,7 +654,7 @@ export default function AdminProductsPage() {
                     value={formData.brand}
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                     placeholder="e.g. HAVELLS"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -623,69 +664,149 @@ export default function AdminProductsPage() {
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     placeholder="e.g. Appliances"
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">Tag Type *</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {TAG_OPTIONS.filter((t) => t.value !== 'normal').map((opt) => {
-                    const Icon = opt.icon;
-                    const isSelected = formData.tag === opt.value;
+              {/* Tag Type Presets & Custom Selection */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800">Tag Type Configuration *</label>
+                  <span className="text-[10px] text-blue-600 font-semibold">Select preset or type custom</span>
+                </div>
+
+                {/* Quick Presets Chips */}
+                <div className="flex flex-wrap gap-1.5">
+                  {tagTypes.map((tt) => {
+                    const isSelected = formData.tag.toLowerCase() === tt.title.toLowerCase();
                     return (
                       <button
-                        key={opt.value}
+                        key={tt.id || tt.title}
                         type="button"
-                        onClick={() => setFormData({ ...formData, tag: opt.value })}
-                        className={`flex items-start gap-2.5 p-3 rounded-xl border-2 text-left transition-all ${
-                          isSelected ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-blue-200 bg-white'
+                        onClick={() => selectTagPreset(tt)}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all flex items-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                         }`}
                       >
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${opt.bg}`}>
-                          <Icon className={`w-3.5 h-3.5 ${opt.color}`} />
-                        </div>
-                        <div>
-                          <p className={`text-xs font-bold ${isSelected ? 'text-blue-700' : 'text-slate-900'}`}>{opt.label}</p>
-                          <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{opt.desc}</p>
-                        </div>
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                        <span>{tt.title}</span>
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Tag Title Input (Allows Typing Custom Tag) */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Tag Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.tag}
+                    onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+                    placeholder="e.g. Special, Old Stock, Festival Bonus..."
+                    className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Tag Description */}
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Description</label>
+                  <input
+                    type="text"
+                    value={formData.tag_description}
+                    onChange={(e) => setFormData({ ...formData, tag_description: e.target.value })}
+                    placeholder="Brief description of the tag"
+                    className="w-full px-3.5 py-2 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Tag Points */}
+                {formData.tag.toLowerCase() !== 'double_points' && (
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-600 mb-1">Reward Points *</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">+</span>
+                      <input
+                        type="number"
+                        required
+                        min={0}
+                        value={formData.bonus_points}
+                        onChange={(e) => setFormData({ ...formData, bonus_points: parseInt(e.target.value) || 0 })}
+                        className="w-full pl-7 pr-16 py-2.5 border border-slate-200 rounded-xl text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">pts</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Point Recipient Checkboxes */}
+                <div className="space-y-2 pt-2">
+                  <label className="block text-[11px] font-bold text-slate-700">Point Recipient *</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
+                      formData.recipient_customer ? 'bg-blue-50/70 border-blue-300' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={formData.recipient_customer}
+                        onChange={(e) => setFormData({ ...formData, recipient_customer: e.target.checked })}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900">Customer</p>
+                        <p className="text-[10px] text-slate-500">Buyer receives points</p>
+                      </div>
+                    </label>
+
+                    <label className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
+                      formData.recipient_rep ? 'bg-purple-50/70 border-purple-300' : 'bg-slate-50 border-slate-200'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={formData.recipient_rep}
+                        onChange={(e) => setFormData({ ...formData, recipient_rep: e.target.checked })}
+                        className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900">Sales Partner</p>
+                        <p className="text-[10px] text-slate-500">Rep receives points</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Point Distribution Summary Rule */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1 mt-2">
+                  <p className="font-bold text-slate-600 uppercase tracking-wider text-[10px]">Point Distribution Rule</p>
+                  {formData.recipient_customer && formData.recipient_rep ? (
+                    <p className="text-emerald-700 font-semibold flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 shrink-0" /> Both Customer and Sales Partner will receive points independently.
+                    </p>
+                  ) : formData.recipient_customer ? (
+                    <p className="text-blue-700 font-semibold flex items-center gap-1.5">
+                      <PackageCheck className="w-3.5 h-3.5 shrink-0" /> Reward points will be awarded ONLY to the Customer.
+                    </p>
+                  ) : formData.recipient_rep ? (
+                    <p className="text-purple-700 font-semibold flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 shrink-0" /> Reward points will be awarded ONLY to the Sales Partner.
+                    </p>
+                  ) : (
+                    <p className="text-amber-700 font-semibold">
+                      ⚠️ Neither Customer nor Sales Partner selected. No points will be awarded.
+                    </p>
+                  )}
+                </div>
+
               </div>
 
-              {formData.tag !== 'double_points' && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bonus Points *</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">+</span>
-                    <input
-                      type="number"
-                      required
-                      min={1}
-                      value={formData.bonus_points}
-                      onChange={(e) => setFormData({ ...formData, bonus_points: parseInt(e.target.value) || 0 })}
-                      className="w-full pl-7 pr-16 py-2.5 border border-slate-200 rounded-lg text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-semibold">pts</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 mt-1">Added flat to buyer&apos;s total on every invoice containing this product.</p>
-                </div>
-              )}
-
-              {formData.tag === 'double_points' && (
-                <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-3 text-xs text-purple-800 font-medium">
-                  <strong>Double Points</strong> applies a 2× multiplier to the buyer&apos;s base points calculation for that invoice.
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-lg text-sm transition-colors">
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl text-sm transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={formLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors">
+                <button type="submit" disabled={formLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors shadow-sm">
                   {formLoading ? 'Saving…' : editingProduct ? 'Update Tag' : 'Save Product Tag'}
                 </button>
               </div>

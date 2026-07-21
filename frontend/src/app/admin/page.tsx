@@ -391,11 +391,11 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Marketing Rep Commissions */}
+        {/* Sales Partner Commissions */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col">
           <div className="mb-4">
-            <h3 className="font-bold text-slate-900 text-sm">Rep Commissions</h3>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">Marketing representative payouts for this month.</p>
+            <h3 className="font-bold text-slate-900 text-sm">Sales Partner Commissions</h3>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">Sales partner payouts for this month.</p>
           </div>
 
           <div className="divide-y divide-slate-100 flex-1 overflow-y-auto max-h-72 custom-scrollbar">

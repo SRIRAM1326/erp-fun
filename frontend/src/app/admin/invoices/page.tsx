@@ -119,7 +119,7 @@ export default function AdminInvoices() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Invoices &amp; Billing</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage global wholesale invoices, assign marketing reps, and process payments.</p>
+          <p className="text-sm text-slate-500 mt-1">Manage global wholesale invoices, assign sales partners, and process payments.</p>
         </div>
         <button 
           onClick={() => setModalOpen(true)}
@@ -167,7 +167,7 @@ export default function AdminInvoices() {
                 <th className="px-6 py-4 font-semibold">Invoice ID</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
                 <th className="px-6 py-4 font-semibold">Buyer (Customer)</th>
-                <th className="px-6 py-4 font-semibold">Marketing Rep</th>
+                <th className="px-6 py-4 font-semibold">Sales Partner</th>
                 <th className="px-6 py-4 font-semibold text-right">Amount</th>
                 <th className="px-6 py-4 font-semibold text-center">Status</th>
                 <th className="px-6 py-4 font-semibold text-right">Earning splits</th>
@@ -289,7 +289,7 @@ export default function AdminInvoices() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">Marketing Representative (Optional)</label>
+                <label className="text-xs font-bold text-slate-700">Sales Partner (Optional)</label>
                 <select 
                   value={newRepId}
                   onChange={(e) => setNewRepId(e.target.value)}

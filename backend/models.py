@@ -99,14 +99,26 @@ class Redemption(db.Model):
     
     user = db.relationship('User', backref='redemptions')
 
+class TagType(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    points = db.Column(db.Integer, default=0)
+    recipient_customer = db.Column(db.Boolean, default=True)
+    recipient_rep = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    tag = db.Column(db.String(50), default='normal') # 'normal', 'special', 'old_stock', 'double_points'
+    tag = db.Column(db.String(100), default='normal')
     bonus_points = db.Column(db.Integer, default=0)
     category = db.Column(db.String(100), nullable=True)
     brand = db.Column(db.String(100), nullable=True)
     sales_rate = db.Column(db.Float, default=0.0)
+    tag_description = db.Column(db.String(255), nullable=True)
+    recipient_customer = db.Column(db.Boolean, default=True)
+    recipient_rep = db.Column(db.Boolean, default=False)
 
 class Configuration(db.Model):
     id = db.Column(db.Integer, primary_key=True)

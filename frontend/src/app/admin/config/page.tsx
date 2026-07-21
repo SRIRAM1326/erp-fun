@@ -145,13 +145,13 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
     ],
   },
   {
-    title: 'Marketing Rep & Commission Settings',
-    desc: 'Controls the commission rate applied and onboarding bonus for marketing representatives.',
+    title: 'Sales Partner & Commission Settings',
+    desc: 'Controls the commission rate applied and onboarding bonus for sales partners.',
     fields: [
       {
         key: 'referral_rate',
         label: 'Rep Commission Rate',
-        description: 'Percentage of the invoice amount awarded as commission points to the Marketing Representative (e.g. 0.01 = 1%).',
+        description: 'Percentage of the invoice amount awarded as commission points to the Sales Partner (e.g. 0.01 = 1%).',
         type: 'percent',
         step: '0.001',
         icon: TrendingUp,
@@ -160,7 +160,7 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
       {
         key: 'shop_onboard_bonus',
         label: 'Shop Onboarding Bonus',
-        description: 'One-time bonus points awarded to a Marketing Representative when a shop assigned to them is verified by the Admin.',
+        description: 'One-time bonus points awarded to a Sales Partner when a shop assigned to them is verified by the Admin.',
         type: 'number',
         suffix: 'pts',
         icon: Store,
@@ -502,11 +502,11 @@ export default function AdminRewardConfigPage() {
                   </div>
                 )}
 
-                {/* Tab 4 Simulator (Representative commissions) */}
+                {/* Tab 4 Simulator (Sales partner commissions) */}
                 {activeTab === 4 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
-                      Slide to simulate an invoice value and calculate representative sales commission.
+                      Slide to simulate an invoice value and calculate sales partner commission.
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between font-mono font-bold">
@@ -531,7 +531,7 @@ export default function AdminRewardConfigPage() {
                     
                     <div className="bg-slate-950 p-4 rounded-xl text-center border border-slate-850">
                       <div className="space-y-1">
-                        <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Rep Commission Calculated</p>
+                        <p className="text-[10px] text-purple-400 uppercase tracking-widest font-bold">Sales Partner Commission Calculated</p>
                         <p className="text-3xl font-black text-white">+{Math.round(simInvoiceVal * referralRate).toLocaleString()} pts</p>
                         <span className="text-[9px] text-slate-500 font-semibold">Calculated at commission rate of {(referralRate*100).toFixed(1)}%.</span>
                       </div>

@@ -53,7 +53,7 @@ export default function AdminReportsPage() {
             <BarChart3 className="w-6 h-6 text-indigo-600 animate-pulse" />
             <span>Analytics &amp; Reports</span>
           </h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">Deep dive into loyalty points liability, spend thresholds, and representative commissions.</p>
+          <p className="text-sm text-slate-500 mt-1">Deep dive into loyalty points liability, spend thresholds, and sales partner commissions.</p>
         </div>
         <button 
           onClick={fetchAnalytics}
@@ -298,9 +298,9 @@ export default function AdminReportsPage() {
           <div className="mb-4">
             <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
               <Landmark className="w-5 h-5 text-purple-600 animate-pulse" /> 
-              <span>Representative Payouts by Month</span>
+              <span>Sales Partner Payouts by Month</span>
             </h3>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">Commissions credited to marketing representatives by calendar period.</p>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">Commissions credited to sales partners by calendar period.</p>
           </div>
 
           <div className="space-y-3.5 max-h-[350px] overflow-y-auto pr-1 flex-1 custom-scrollbar">
@@ -309,7 +309,7 @@ export default function AdminReportsPage() {
             ) : payouts.length === 0 ? (
               <div className="border border-slate-200 border-dashed rounded-2xl p-6 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
                 <Landmark className="w-8 h-8 opacity-45" />
-                <p className="text-xs font-semibold">No representative commission log recorded</p>
+                <p className="text-xs font-semibold">No sales partner commission log recorded</p>
               </div>
             ) : (
               payouts.map((pay: any, i: number) => (

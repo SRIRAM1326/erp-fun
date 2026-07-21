@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
-from models import db, User, QRCode, PointsTransaction, Reward, Campaign, Invoice, Redemption, Product, Configuration
+from models import db, User, QRCode, PointsTransaction, Reward, Campaign, Invoice, Redemption, Product, Configuration, TagType
 import uuid
 import random
 from datetime import datetime
@@ -1887,39 +1887,57 @@ def calculate_invoice_points(inv, config):
         rules.append(f"BR-03 (Paid in {days_elapsed}d - scale factor {factor:.2f}x)")
         
     # Product tags check
-    flat_bonuses = 0
+    flat_bonuses_customer = 0
+    flat_bonuses_rep = 0
     has_double_points_product = False
     
     if inv.products:
         product_names = [p.strip() for p in inv.products.split(',') if p.strip()]
         for prod_name in product_names:
             product = Product.query.filter_by(name=prod_name).first()
-            if product:
-                if product.tag == 'special':
-                    val = product.bonus_points or config.special_bonus
-                    flat_bonuses += val
-                    rules.append(f"BR-10 ({prod_name} Special product bonus +{val})")
-                elif product.tag == 'old_stock':
-                    val = product.bonus_points or config.old_stock_bonus
-                    flat_bonuses += val
-                    rules.append(f"BR-11 ({prod_name} Old Stock product bonus +{val})")
-                elif product.tag == 'double_points':
-                    has_double_points_product = True
-                    rules.append(f"BR-09 ({prod_name} Double points product - 2x)")
+            if product and product.tag and product.tag.lower() != 'normal':
+                tag_lower = product.tag.lower()
+                val = product.bonus_points or 0
+                if val == 0:
+                    if tag_lower == 'special':
+                        val = getattr(config, 'special_bonus', 300) or 300
+                    elif tag_lower == 'old_stock':
+                        val = getattr(config, 'old_stock_bonus', 500) or 500
+
+                rec_cust = getattr(product, 'recipient_customer', True)
+                if rec_cust is None: rec_cust = True
+                rec_rep = getattr(product, 'recipient_rep', False)
+                if rec_rep is None: rec_rep = False
+
+                if tag_lower == 'double_points':
+                    if rec_cust:
+                        has_double_points_product = True
+                        rules.append(f"BR-09 ({prod_name} Double points product - 2x to Customer)")
+                    if rec_rep and inv.rep_id:
+                        flat_bonuses_rep += val
+                        rules.append(f"BR-09 ({prod_name} Double points bonus +{val} to Sales Partner)")
+                else:
+                    if rec_cust and val > 0:
+                        flat_bonuses_customer += val
+                        rules.append(f"Tag [{product.tag}] ({prod_name} bonus +{val} to Customer)")
+                    if rec_rep and val > 0 and inv.rep_id:
+                        flat_bonuses_rep += val
+                        rules.append(f"Tag [{product.tag}] ({prod_name} bonus +{val} to Sales Partner)")
                     
     if has_double_points_product:
         multiplier *= 2.0
         
-    buyer_points = int(base_buyer_points * max(0.0, multiplier)) + flat_bonuses
+    buyer_points = int(base_buyer_points * max(0.0, multiplier)) + flat_bonuses_customer
     
     # Representative Commission points
-    rep_points = 0
+    rep_points = flat_bonuses_rep
     if inv.rep_id:
         if inv.amount >= config.referral_min_value:
-            rep_points = int(inv.amount * config.referral_rate)
-            rules.append(f"BR-12 (Qualified Referral commission {config.referral_rate * 100:.1f}%)")
+            comm = int(inv.amount * config.referral_rate)
+            rep_points += comm
+            rules.append(f"BR-12 (Qualified Referral commission {config.referral_rate * 100:.1f}%: +{comm} pts)")
         else:
-            rules.append(f"BR-13 (Did not qualify - amount below {config.referral_min_value})")
+            rules.append(f"BR-13 (Did not qualify for percentage referral - amount below {config.referral_min_value})")
             
     return buyer_points, rep_points, ", ".join(rules)
 
@@ -2104,6 +2122,80 @@ def admin_post_config():
     
     return jsonify({'message': f'Settings updated successfully. Saved version {next_version}.', 'version': next_version}), 200
 
+# ==================== TAG TYPES MANAGEMENT APIS ====================
+
+@api.route('/admin/tag-types', methods=['GET'])
+@jwt_required()
+def admin_get_tag_types():
+    current_user = get_jwt()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    tag_types = TagType.query.order_by(TagType.title).all()
+    result = []
+    for tt in tag_types:
+        result.append({
+            'id': tt.id,
+            'title': tt.title,
+            'description': tt.description or '',
+            'points': tt.points,
+            'recipient_customer': tt.recipient_customer if tt.recipient_customer is not None else True,
+            'recipient_rep': tt.recipient_rep if tt.recipient_rep is not None else False
+        })
+    return jsonify(result), 200
+
+@api.route('/admin/tag-types', methods=['POST'])
+@jwt_required()
+def admin_post_tag_type():
+    current_user = get_jwt()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    data = request.get_json()
+    title = data.get('title', '').strip()
+    if not title:
+        return jsonify({'message': 'Tag title is required'}), 400
+        
+    description = data.get('description', '').strip()
+    points = int(data.get('points', 0) or 0)
+    recipient_customer = bool(data.get('recipient_customer', True))
+    recipient_rep = bool(data.get('recipient_rep', False))
+    
+    tt = TagType.query.filter(func.lower(TagType.title) == title.lower()).first()
+    if tt:
+        tt.title = title
+        tt.description = description
+        tt.points = points
+        tt.recipient_customer = recipient_customer
+        tt.recipient_rep = recipient_rep
+    else:
+        tt = TagType(
+            title=title,
+            description=description,
+            points=points,
+            recipient_customer=recipient_customer,
+            recipient_rep=recipient_rep
+        )
+        db.session.add(tt)
+        
+    db.session.commit()
+    return jsonify({'message': f'Tag type "{title}" saved successfully', 'id': tt.id}), 200
+
+@api.route('/admin/tag-types/<int:id>', methods=['DELETE'])
+@jwt_required()
+def admin_delete_tag_type(id):
+    current_user = get_jwt()
+    if current_user['role'] != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+        
+    tt = TagType.query.get(id)
+    if not tt:
+        return jsonify({'message': 'Tag type not found'}), 404
+        
+    db.session.delete(tt)
+    db.session.commit()
+    return jsonify({'message': 'Tag type deleted successfully'}), 200
+
 # ==================== PRODUCT MANAGEMENT APIS ====================
 
 @api.route('/admin/products', methods=['GET'])
@@ -2136,6 +2228,9 @@ def admin_get_products():
             'name': p.name,
             'tag': p.tag,
             'bonus_points': p.bonus_points,
+            'tag_description': p.tag_description or '',
+            'recipient_customer': p.recipient_customer if p.recipient_customer is not None else True,
+            'recipient_rep': p.recipient_rep if p.recipient_rep is not None else False,
             'category': p.category or 'Default',
             'brand': p.brand or 'Default',
             'sales_rate': p.sales_rate,
@@ -2153,10 +2248,13 @@ def admin_post_product():
         
     data = request.get_json()
     name = data.get('name', '').strip()
-    tag = data.get('tag', 'normal').strip().lower()
+    tag = data.get('tag', 'normal').strip()
+    tag_description = data.get('tag_description', '').strip()
     bonus_points = int(data.get('bonus_points', 0) or 0)
     category = data.get('category', '').strip()
     brand = data.get('brand', '').strip()
+    recipient_customer = bool(data.get('recipient_customer', True))
+    recipient_rep = bool(data.get('recipient_rep', False))
     
     if not name:
         return jsonify({'message': 'Product name is required'}), 400
@@ -2165,14 +2263,44 @@ def admin_post_product():
     if product:
         product.tag = tag
         product.bonus_points = bonus_points
+        product.tag_description = tag_description
+        product.recipient_customer = recipient_customer
+        product.recipient_rep = recipient_rep
         if category:
             product.category = category
         if brand:
             product.brand = brand
     else:
-        product = Product(name=name, tag=tag, bonus_points=bonus_points, category=category, brand=brand)
+        product = Product(
+            name=name,
+            tag=tag,
+            bonus_points=bonus_points,
+            tag_description=tag_description,
+            recipient_customer=recipient_customer,
+            recipient_rep=recipient_rep,
+            category=category,
+            brand=brand
+        )
         db.session.add(product)
         
+    # Auto-upsert into TagType table if tag != 'normal'
+    if tag and tag.lower() != 'normal':
+        tt = TagType.query.filter(func.lower(TagType.title) == tag.lower()).first()
+        if tt:
+            tt.description = tag_description or tt.description
+            tt.points = bonus_points
+            tt.recipient_customer = recipient_customer
+            tt.recipient_rep = recipient_rep
+        else:
+            tt = TagType(
+                title=tag,
+                description=tag_description,
+                points=bonus_points,
+                recipient_customer=recipient_customer,
+                recipient_rep=recipient_rep
+            )
+            db.session.add(tt)
+
     db.session.commit()
     return jsonify({'message': f'Product {name} updated successfully'}), 200
 

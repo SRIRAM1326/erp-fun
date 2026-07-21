@@ -67,7 +67,7 @@ export default function RepProfile() {
         </div>
         <div className="text-center sm:text-left space-y-1">
           <h2 className="text-xl font-extrabold text-white">{data?.name || 'Representative'}</h2>
-          <p className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Marketing Representative</p>
+          <p className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Sales Partner</p>
           <div className="flex items-center gap-1.5 text-xs text-[#8f8bb3] justify-center sm:justify-start">
             <Mail className="w-3.5 h-3.5" />
             <span>{data?.email || 'rep@sales.com'}</span>
@@ -78,7 +78,7 @@ export default function RepProfile() {
       {/* Referral Code Box */}
       <div className="bg-gradient-to-r from-[#1e1b4b] to-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-4">
         <div>
-          <h3 className="font-bold text-white text-base">Your Representative Referral Code</h3>
+          <h3 className="font-bold text-white text-base">Your Sales Partner Referral Code</h3>
           <p className="text-xs text-[#8f8bb3] mt-1">Provide this code to store owners when onboarding them. You will receive 1,000 points upon their verification and 1% of all invoices paid.</p>
         </div>
         <div className="flex gap-2">
@@ -119,7 +119,7 @@ export default function RepProfile() {
       {/* Security Chip */}
       <div className="flex items-center gap-3 justify-center p-4 bg-[#14122d]/40 border border-[#242247] rounded-2xl max-w-xs mx-auto">
         <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-        <p className="text-xs font-semibold text-[#8f8bb3]">Authorized Sales Rep Profile.</p>
+        <p className="text-xs font-semibold text-[#8f8bb3]">Authorized Sales Partner Profile.</p>
       </div>
     </div>
   );
