@@ -23,6 +23,7 @@ def create_app(config_class=Config):
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS invoice_reward_percentage FLOAT DEFAULT 0.50;"))
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_consecutive_months INTEGER DEFAULT 3;"))
             db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS loyalty_min_monthly_purchase FLOAT DEFAULT 200000.0;"))
+            db.session.execute(text("ALTER TABLE configuration ADD COLUMN IF NOT EXISTS excess_spend_bonus_rate FLOAT DEFAULT 0.01;"))
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS customer_code VARCHAR(100);"))
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS address VARCHAR(255) DEFAULT '0';"))
             db.session.execute(text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS city VARCHAR(100) DEFAULT '0';"))
@@ -72,6 +73,7 @@ def create_app(config_class=Config):
                 forfeiture_cutoff=30,
                 high_spend_threshold=200000.0,
                 high_spend_bonus=500,
+                excess_spend_bonus_rate=0.01,
                 loyalty_consecutive_months=3,
                 loyalty_min_monthly_purchase=200000.0,
                 loyalty_bonus=10000,

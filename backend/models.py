@@ -128,6 +128,7 @@ class Configuration(db.Model):
     forfeiture_cutoff = db.Column(db.Integer, default=30)
     high_spend_threshold = db.Column(db.Float, default=200000.0)
     high_spend_bonus = db.Column(db.Integer, default=500)
+    excess_spend_bonus_rate = db.Column(db.Float, default=0.01)
     loyalty_consecutive_months = db.Column(db.Integer, default=3)
     loyalty_min_monthly_purchase = db.Column(db.Float, default=200000.0)
     loyalty_bonus = db.Column(db.Integer, default=10000)

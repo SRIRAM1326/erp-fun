@@ -56,12 +56,12 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
   },
   {
     title: 'High-Spend Threshold Bonus',
-    desc: 'Buyers who exceed the monthly purchase threshold earn an additional flat bonus on top of their invoice points.',
+    desc: 'Buyers who exceed the monthly purchase threshold earn a flat bonus plus a proportional percentage bonus on excess spend.',
     fields: [
       {
         key: 'high_spend_threshold',
         label: 'Monthly Purchase Threshold',
-        description: "If a buyer's total paid invoice amount in a calendar month exceeds this value, they qualify for the high-spend bonus.",
+        description: "If a buyer's total paid invoice amount in a calendar month exceeds this value, they qualify for high-spend bonuses.",
         type: 'number',
         prefix: '₹',
         icon: TrendingUp,
@@ -69,11 +69,20 @@ const CONFIG_GROUPS: { title: string; desc: string; fields: ConfigField[] }[] = 
       },
       {
         key: 'high_spend_bonus',
-        label: 'High-Spend Bonus Points',
-        description: 'Flat bonus points awarded when a buyer exceeds the monthly purchase threshold.',
+        label: 'High-Spend Flat Bonus Points',
+        description: 'Flat bonus points awarded when a buyer reaches or exceeds the monthly purchase threshold.',
         type: 'number',
         suffix: 'pts',
         icon: Gift,
+        usedIn: ['Customer Portal', 'Admin Portal'],
+      },
+      {
+        key: 'excess_spend_bonus_rate',
+        label: 'Excess Spend Bonus Rate',
+        description: 'Additional percentage of bonus points awarded on all purchase spend exceeding the monthly threshold (e.g. 0.01 = 1%).',
+        type: 'percent',
+        step: '0.001',
+        icon: TrendingUp,
         usedIn: ['Customer Portal', 'Admin Portal'],
       },
     ],
@@ -459,7 +468,7 @@ export default function AdminRewardConfigPage() {
                 {activeTab === 1 && (
                   <div className="space-y-4 text-xs">
                     <p className="text-slate-400 leading-normal">
-                      Simulate a buyer&apos;s monthly cumulative purchase spend to see threshold milestone qualification.
+                      Slide to simulate a buyer&apos;s total monthly paid purchases and preview flat + proportional excess spend bonuses.
                     </p>
                     <div className="space-y-2">
                       <div className="flex justify-between font-mono font-bold">
@@ -469,7 +478,7 @@ export default function AdminRewardConfigPage() {
                       <input
                         type="range"
                         min="0"
-                        max="300000"
+                        max="500000"
                         step="5000"
                         value={simMonthlySpend}
                         onChange={(e) => setSimMonthlySpend(parseInt(e.target.value))}
@@ -478,27 +487,50 @@ export default function AdminRewardConfigPage() {
                       <div className="flex justify-between text-[10px] text-slate-500 font-bold font-mono">
                         <span>₹0</span>
                         <span>₹{(highSpendThreshold/1000).toFixed(0)}k (threshold)</span>
-                        <span>₹300k</span>
+                        <span>₹500k</span>
                       </div>
                     </div>
                     
-                    <div className="bg-slate-950 p-4 rounded-xl text-center border border-slate-850">
-                      {simMonthlySpend >= highSpendThreshold ? (
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-black flex items-center justify-center gap-1">
-                            <Sparkles className="w-3.5 h-3.5" /> Milestone Unlocked!
-                          </p>
-                          <p className="text-3xl font-black text-white">+{highSpendBonus} pts</p>
-                          <span className="text-[9px] text-slate-500 font-semibold">Credited to buyer as monthly milestone bonus.</span>
+                    {(() => {
+                      const isThresholdMet = simMonthlySpend >= highSpendThreshold;
+                      const excessAmount = Math.max(0, simMonthlySpend - highSpendThreshold);
+                      const excessRate = config?.excess_spend_bonus_rate ?? 0.01;
+                      const excessPts = Math.round(excessAmount * excessRate);
+                      const flatPts = isThresholdMet ? highSpendBonus : 0;
+                      const totalBonusPts = flatPts + excessPts;
+
+                      return (
+                        <div className="bg-slate-950 p-4 rounded-xl text-center space-y-2 border border-slate-850">
+                          {isThresholdMet ? (
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-black flex items-center justify-center gap-1">
+                                <Sparkles className="w-3.5 h-3.5" /> High-Spend Milestone Unlocked!
+                              </p>
+                              <p className="text-3xl font-black text-white">+{totalBonusPts.toLocaleString()} pts</p>
+                              
+                              <div className="pt-2 border-t border-slate-800 text-left text-[11px] space-y-1 text-slate-400">
+                                <div className="flex justify-between">
+                                  <span>Flat Milestone Bonus:</span>
+                                  <span className="font-mono text-emerald-400 font-bold">+{flatPts} pts</span>
+                                </div>
+                                {excessAmount > 0 && (
+                                  <div className="flex justify-between">
+                                    <span>Excess Bonus ({(excessRate * 100).toFixed(1)}% on ₹{excessAmount.toLocaleString()}):</span>
+                                    <span className="font-mono text-purple-400 font-bold">+{excessPts.toLocaleString()} pts</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <p className="text-[10px] text-amber-500 uppercase tracking-widest font-black">Threshold Locked</p>
+                              <p className="text-lg font-bold text-slate-400">₹{(highSpendThreshold - simMonthlySpend).toLocaleString()} more spend needed</p>
+                              <span className="text-[9px] text-slate-500 font-semibold">Spend ₹{(highSpendThreshold).toLocaleString()} to unlock flat bonus + 1% excess bonus.</span>
+                            </div>
+                          )}
                         </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-amber-500 uppercase tracking-widest font-black">Milestone Locked</p>
-                          <p className="text-lg font-bold text-slate-400">₹{(highSpendThreshold - simMonthlySpend).toLocaleString()} more spend needed</p>
-                          <span className="text-[9px] text-slate-500 font-semibold">Flat bonus of +{highSpendBonus} pts not qualified.</span>
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })()}
                   </div>
                 )}
 

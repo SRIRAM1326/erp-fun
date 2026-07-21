@@ -713,6 +713,7 @@ def admin_pay_invoice(id):
         
         # Check and award Loyalty Tier streak bonus if consecutive monthly purchase criteria is met
         check_and_award_loyalty_streak_bonus(buyer, config)
+        check_and_award_high_spend_bonus(buyer, inv, config)
         
     # Representative Commission
     if rep_points > 0 and inv.rep_id:
@@ -1841,6 +1842,7 @@ def admin_upload_invoices():
                         
                 db.session.commit()
                 check_and_award_loyalty_streak_bonus(buyer, config)
+                check_and_award_high_spend_bonus(buyer, invoice, config)
                 
             count += 1
             
@@ -2010,6 +2012,89 @@ def check_and_award_loyalty_streak_bonus(buyer, config):
 
     return False, 0
 
+def check_and_award_high_spend_bonus(buyer, current_invoice, config):
+    """
+    Checks buyer's monthly paid invoice total.
+    1. Awards flat milestone bonus (high_spend_bonus) when total reaches high_spend_threshold for the first time in the month.
+    2. Awards proportional excess bonus (excess_spend_bonus_rate * excess_amount) for any spend above high_spend_threshold.
+    """
+    if not buyer or not current_invoice or not config:
+        return False, 0
+
+    threshold = getattr(config, 'high_spend_threshold', 200000.0) or 200000.0
+    flat_bonus = getattr(config, 'high_spend_bonus', 500) or 500
+    excess_rate = getattr(config, 'excess_spend_bonus_rate', 0.01)
+    if excess_rate is None:
+        excess_rate = 0.01
+
+    if threshold <= 0:
+        return False, 0
+
+    dt = current_invoice.paid_at or current_invoice.created_at or datetime.utcnow()
+    month_str = dt.strftime('%Y-%m')
+
+    # Query all paid invoices for this buyer in the same calendar month (excluding current_invoice)
+    paid_invoices = Invoice.query.filter(
+        Invoice.buyer_id == buyer.id,
+        Invoice.status == 'paid',
+        Invoice.id != current_invoice.id
+    ).all()
+
+    prev_monthly_paid = 0.0
+    for inv in paid_invoices:
+        inv_dt = inv.paid_at or inv.created_at
+        if inv_dt and inv_dt.strftime('%Y-%m') == month_str:
+            prev_monthly_paid += inv.amount
+
+    new_monthly_paid = prev_monthly_paid + current_invoice.amount
+
+    # 1. Flat bonus check (awarded once per month when crossing threshold)
+    flat_pts_awarded = 0
+    if new_monthly_paid >= threshold and prev_monthly_paid < threshold:
+        flat_tag = f"high_spend_flat_{month_str}"
+        existing_flat_txn = PointsTransaction.query.filter_by(
+            buyer_id=buyer.id,
+            source='high_spend_bonus',
+            invoice_number=flat_tag
+        ).first()
+        if not existing_flat_txn and flat_bonus > 0:
+            flat_pts_awarded = flat_bonus
+            buyer.total_points += flat_bonus
+            db.session.add(PointsTransaction(
+                buyer_id=buyer.id,
+                points=flat_bonus,
+                transaction_type='credit',
+                source='high_spend_bonus',
+                invoice_number=flat_tag,
+                rule_applied=f"BR-05 (Monthly Spend Threshold ₹{threshold:,.0f} Reached: Flat Bonus +{flat_bonus} pts)"[:100],
+                created_at=datetime.utcnow()
+            ))
+
+    # 2. Proportional excess bonus check (for portion of invoice amount exceeding threshold)
+    excess_pts_awarded = 0
+    if new_monthly_paid > threshold and excess_rate > 0:
+        excess_portion = new_monthly_paid - max(threshold, prev_monthly_paid)
+        if excess_portion > 0:
+            excess_pts_awarded = int(excess_portion * excess_rate)
+            if excess_pts_awarded > 0:
+                buyer.total_points += excess_pts_awarded
+                db.session.add(PointsTransaction(
+                    buyer_id=buyer.id,
+                    points=excess_pts_awarded,
+                    transaction_type='credit',
+                    source='high_spend_bonus',
+                    invoice_number=current_invoice.invoice_number,
+                    rule_applied=f"BR-08 (Proportional Excess Spend Bonus {excess_rate * 100:.1f}% on ₹{excess_portion:,.0f} above threshold: +{excess_pts_awarded} pts)"[:100],
+                    created_at=datetime.utcnow()
+                ))
+
+    total_awarded = flat_pts_awarded + excess_pts_awarded
+    if total_awarded > 0:
+        db.session.commit()
+        return True, total_awarded
+
+    return False, 0
+
 # ==================== CONFIGURATION & VERSIONING APIS ====================
 
 @api.route('/admin/config', methods=['GET'])
@@ -2037,6 +2122,7 @@ def admin_get_config():
         'forfeiture_cutoff': config.forfeiture_cutoff,
         'high_spend_threshold': config.high_spend_threshold,
         'high_spend_bonus': config.high_spend_bonus,
+        'excess_spend_bonus_rate': getattr(config, 'excess_spend_bonus_rate', 0.01) if getattr(config, 'excess_spend_bonus_rate', 0.01) is not None else 0.01,
         'loyalty_consecutive_months': getattr(config, 'loyalty_consecutive_months', 3) or 3,
         'loyalty_min_monthly_purchase': getattr(config, 'loyalty_min_monthly_purchase', 200000.0) or 200000.0,
         'loyalty_bonus': config.loyalty_bonus if config.loyalty_bonus is not None else 10000,
@@ -2071,6 +2157,7 @@ def admin_get_config_versions():
             'forfeiture_cutoff': c.forfeiture_cutoff,
             'high_spend_threshold': c.high_spend_threshold,
             'high_spend_bonus': c.high_spend_bonus,
+            'excess_spend_bonus_rate': getattr(c, 'excess_spend_bonus_rate', 0.01) if getattr(c, 'excess_spend_bonus_rate', 0.01) is not None else 0.01,
             'loyalty_consecutive_months': getattr(c, 'loyalty_consecutive_months', 3) or 3,
             'loyalty_min_monthly_purchase': getattr(c, 'loyalty_min_monthly_purchase', 200000.0) or 200000.0,
             'loyalty_bonus': c.loyalty_bonus if c.loyalty_bonus is not None else 10000,
@@ -2106,6 +2193,7 @@ def admin_post_config():
         forfeiture_cutoff=int(data.get('forfeiture_cutoff', 30)),
         high_spend_threshold=float(data.get('high_spend_threshold', 200000.0)),
         high_spend_bonus=int(data.get('high_spend_bonus', 500)),
+        excess_spend_bonus_rate=float(data.get('excess_spend_bonus_rate', 0.01)),
         loyalty_consecutive_months=int(data.get('loyalty_consecutive_months', 3)),
         loyalty_min_monthly_purchase=float(data.get('loyalty_min_monthly_purchase', 200000.0)),
         loyalty_bonus=int(data.get('loyalty_bonus', 10000)),
