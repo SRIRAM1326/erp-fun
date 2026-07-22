@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { FileText, Plus, ShieldCheck, Award, TrendingUp, Users, CheckCircle2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { FileText, Plus, ShieldCheck, Award, TrendingUp, Users, CheckCircle2, Gift, Coins, Wallet, Sparkles, ArrowRight, Zap, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function RepDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [claimedDaily, setClaimedDaily] = useState(false);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -26,196 +26,233 @@ export default function RepDashboard() {
     fetchDashboard();
   }, []);
 
+  const handleDailyClaim = () => {
+    setClaimedDaily(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8b5cf6]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#0d7a75]"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto mt-10 p-6 bg-[#14122d] border border-[#242247] rounded-2xl text-center">
-        <p className="text-red-400 font-semibold mb-4">{error}</p>
-        <button onClick={() => window.location.reload()} className="px-4 py-2 bg-[#8b5cf6] text-white rounded-xl font-bold hover:bg-[#8b5cf6]/80 transition-all">Retry</button>
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white border border-rose-200 rounded-3xl text-center shadow-lg">
+        <p className="text-rose-600 font-bold mb-4">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-6 py-2 bg-[#0d7a75] text-white rounded-xl font-bold shadow hover:bg-[#0b6a65] transition-all"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
-  // Calculate XP progress (gamified)
-  // Let's assume 1 point = 1 XP. Gold is 5000 XP. Next tier is Platinum at 15000 XP.
-  const currentPoints = data?.points || 0;
-  const nextTierPoints = 15000;
-  const prevTierPoints = 5000;
-  const progressPercent = Math.min(100, Math.max(10, ((currentPoints - prevTierPoints) / (nextTierPoints - prevTierPoints)) * 100));
-
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Welcome Header */}
-      <div>
-        <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Overview</span>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">Welcome back, Representative</h1>
-        <p className="text-[#8f8bb3] text-sm mt-1">Monitor your referred stores, sales commissions, and claim your rewards.</p>
-      </div>
-
-      {/* Grid of Main Cards */}
-      <div className="grid md:grid-cols-3 gap-6">
-        
-        {/* Neon Points Balance Card */}
-        <div className="md:col-span-2 bg-gradient-to-br from-[#1e1b4b] via-[#311042] to-[#1e1b4b] border border-[#4a1d6d] rounded-3xl p-6 relative overflow-hidden shadow-2xl shadow-[#8b5cf6]/5 flex flex-col justify-between">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-[#8b5cf6] rounded-full blur-3xl opacity-20"></div>
-          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-[#ec4899] rounded-full blur-3xl opacity-20"></div>
-          
-          <div className="relative z-10">
-            <span className="text-xs font-bold text-[#ffd700] uppercase tracking-wider block mb-1">Your Rewards Pool</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black text-white">{(data?.points || 0).toLocaleString()}</span>
-              <span className="text-lg font-bold text-[#ffd700]">PTS</span>
-            </div>
-            <p className="text-xs text-[#8f8bb3] mt-2 font-medium">Pending points credit immediately after referred invoice payments complete.</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-8 pt-6 border-t border-[#242247] relative z-10">
-            <div>
-              <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Pending points</p>
-              <p className="text-lg font-extrabold text-[#3b82f6]">+{ (data?.pending_points || 0).toLocaleString() } pts</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Credited Commission</p>
-              <p className="text-lg font-extrabold text-emerald-400">+{ (data?.credited_points || 0).toLocaleString() } pts</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Gamified Level Tracker Card */}
-        <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 flex flex-col justify-between shadow-xl">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-[#ffd700] uppercase tracking-wider">Rank Status</span>
-              <span className="bg-[#ffd700]/15 text-[#ffd700] text-[10px] font-bold px-2 py-0.5 rounded-full">Rank #4</span>
-            </div>
-            
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#ffd700]/10 flex items-center justify-center text-[#ffd700] border border-[#ffd700]/20">
-                <Award className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-white text-lg">Gold Representative</h3>
-                <p className="text-xs text-[#8f8bb3]">Commission multiplier: 1.0x</p>
-              </div>
-            </div>
-
-            <div className="space-y-2 mt-6">
-              <div className="flex justify-between text-xs font-semibold text-[#8f8bb3]">
-                <span>Progress to Platinum</span>
-                <span className="text-white">{(data?.points || 0).toLocaleString()} / 15,000 pts</span>
-              </div>
-              <div className="w-full bg-[#0c0a1f] h-2.5 rounded-full overflow-hidden border border-[#242247]">
-                <div 
-                  className="bg-gradient-to-r from-[#8b5cf6] to-[#ec4899] h-full rounded-full transition-all duration-1000"
-                  style={{ width: `${progressPercent}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-1.5 mt-6 flex-wrap">
-            <span className="text-[9px] font-bold px-2 py-1 rounded bg-[#ec4899]/10 text-[#f472b6] border border-[#ec4899]/20">⚡ Streak x3</span>
-            <span className="text-[9px] font-bold px-2 py-1 rounded bg-[#3b82f6]/10 text-[#60a5fa] border border-[#3b82f6]/20">🎯 Target Master</span>
-            <span className="text-[9px] font-bold px-2 py-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">👑 Kingmaker</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Action CTA Row */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-6 bg-[#14122d] border border-[#242247] rounded-3xl shadow-lg">
-        <div className="flex items-center gap-3 text-left">
-          <div className="p-3 rounded-2xl bg-[#8b5cf6]/10 text-[#8b5cf6]">
-            <TrendingUp className="w-6 h-6" />
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+      
+      {/* 1. Daily Check-in Card (Matching Center Screen Top Banner in Screenshot) */}
+      <div className="bg-[#0d7a75] text-white p-5 rounded-3xl shadow-md flex items-center justify-between relative overflow-hidden">
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+            <Gift className="w-7 h-7 text-amber-300 animate-bounce" />
           </div>
           <div>
-            <h3 className="font-bold text-white">Linked Invoices & Sales Value</h3>
-            <p className="text-xs text-[#8f8bb3] mt-0.5">
-              You have <span className="text-white font-bold">{data?.total_invoices || 0}</span> linked invoices valued at <span className="text-white font-bold">₹{(data?.total_value || 0).toLocaleString()}</span>.
+            <h2 className="font-extrabold text-white text-base">Collect points everyday!</h2>
+            <p className="text-xs text-teal-100 mt-0.5 font-medium flex items-center gap-1.5">
+              <span>Streak: Day 4</span>
+              <span>&bull;</span>
+              <span className="text-amber-300 font-bold flex items-center gap-1">
+                <Coins className="w-3.5 h-3.5" /> +15 coins bonus
+              </span>
             </p>
           </div>
         </div>
-        <Link href="/rep/invoices" className="w-full sm:w-auto bg-[#8b5cf6] hover:bg-[#8b5cf6]/80 text-white font-bold px-6 py-3 rounded-2xl transition-all shadow-lg shadow-[#8b5cf6]/20 flex items-center justify-center gap-2">
-          <Plus className="w-5 h-5" /> Link New Invoice
+
+        <button 
+          onClick={handleDailyClaim}
+          disabled={claimedDaily}
+          className={`shrink-0 px-5 py-2 rounded-full font-black text-xs transition-all shadow-sm ${
+            claimedDaily 
+              ? 'bg-teal-900 text-teal-200 cursor-default flex items-center gap-1' 
+              : 'bg-white text-[#0d7a75] hover:bg-amber-300 hover:text-slate-900'
+          }`}
+        >
+          {claimedDaily ? (
+            <>
+              <Check className="w-3.5 h-3.5" /> Claimed
+            </>
+          ) : (
+            'Claim'
+          )}
+        </button>
+      </div>
+
+      {/* 2. Earning Field (2x2 Vibrant Feature Grid Cards matching Screenshot center view) */}
+      <div>
+        <h3 className="text-base font-extrabold text-slate-800 mb-3 px-1">Earning Field</h3>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Card 1: Coral Red Pink (Offerwalls / Link Invoices) */}
+          <Link href="/rep/invoices" className="bg-[#ff5b5b] hover:bg-[#f84c4c] text-white p-5 rounded-3xl shadow-md flex flex-col justify-between h-36 transition-transform hover:-translate-y-1">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-black text-white text-base">Link Invoices</h4>
+              <p className="text-[11px] text-white/90 font-medium leading-tight mt-0.5">Recommended way to earn 1% sales points</p>
+            </div>
+          </Link>
+
+          {/* Card 2: Warm Peach Orange (Surveys / Redeem Cash) */}
+          <Link href="/rep/earnings" className="bg-[#ff9f43] hover:bg-[#f79333] text-white p-5 rounded-3xl shadow-md flex flex-col justify-between h-36 transition-transform hover:-translate-y-1">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-black text-white text-base">Redeem Payout</h4>
+              <p className="text-[11px] text-white/90 font-medium leading-tight mt-0.5">Convert points to direct bank deposits</p>
+            </div>
+          </Link>
+
+          {/* Card 3: Bright Emerald Green (Watch Video / Leaderboard) */}
+          <Link href="/rep/earnings" className="bg-[#22c55e] hover:bg-[#1bb853] text-white p-5 rounded-3xl shadow-md flex flex-col justify-between h-36 transition-transform hover:-translate-y-1">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+              <Award className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-black text-white text-base">Leaderboard</h4>
+              <p className="text-[11px] text-white/90 font-medium leading-tight mt-0.5">Regional ranks & monthly bonus pool</p>
+            </div>
+          </Link>
+
+          {/* Card 4: Vivid Purple (Refer A Friend) */}
+          <Link href="/rep/profile" className="bg-[#6366f1] hover:bg-[#5457e5] text-white p-5 rounded-3xl shadow-md flex flex-col justify-between h-36 transition-transform hover:-translate-y-1">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h4 className="font-black text-white text-base">Refer A Store</h4>
+              <p className="text-[11px] text-white/90 font-medium leading-tight mt-0.5">Share your code to earn 1,000 points</p>
+            </div>
+          </Link>
+
+        </div>
+      </div>
+
+      {/* 3. Featured Offers / Referred Shops Cards (matching Screenshot cards section) */}
+      <div>
+        <div className="flex justify-between items-center mb-3 px-1">
+          <h3 className="text-base font-extrabold text-slate-800">Featured Referred Shops</h3>
+          <span className="text-xs text-[#0d7a75] font-bold">{data?.referred_buyers?.length || 0} Stores</span>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-4">
+          {data?.referred_buyers?.length === 0 ? (
+            <div className="sm:col-span-3 bg-white p-6 rounded-2xl border border-slate-200 text-center">
+              <p className="text-xs text-slate-500 font-medium">No referred stores registered yet.</p>
+              <p className="text-xs font-bold text-[#0d7a75] mt-1">Share referral code <span className="bg-[#f0f7f5] px-2 py-0.5 rounded text-slate-900 border border-[#0d7a75]/30 font-mono">{data?.referral_code}</span></p>
+            </div>
+          ) : (
+            data?.referred_buyers?.slice(0, 3).map((buyer: any, idx: number) => (
+              <div key={buyer.id || idx} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col justify-between space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-extrabold text-sm shrink-0">
+                    🏆
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-extrabold text-slate-900 text-sm truncate">{buyer.business_name || buyer.name}</h4>
+                    <p className="text-[11px] text-slate-500 truncate">{buyer.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    buyer.is_verified ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  }`}>
+                    {buyer.is_verified ? 'Verified' : 'Pending'}
+                  </span>
+
+                  <Link 
+                    href="/rep/invoices" 
+                    className="bg-[#0d7a75] hover:bg-[#0b6a65] text-white text-[11px] font-bold px-3 py-1 rounded-lg flex items-center gap-1 transition-all"
+                  >
+                    Check Now <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* 4. Scratch Cards Banner (Matching Center Screen Scratch Cards box in Screenshot) */}
+      <div className="bg-[#075955] text-white p-5 rounded-3xl shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-300 bg-amber-400/20 px-2.5 py-0.5 rounded-full border border-amber-300/30">
+            Scratch Cards
+          </span>
+          <h4 className="font-extrabold text-white text-base mt-1.5">Scratch card and test your luck to earn coins</h4>
+          <p className="text-xs text-teal-100 mt-0.5">Bonus scratch tickets awarded for every 5 linked invoices.</p>
+        </div>
+
+        <Link 
+          href="/rep/earnings" 
+          className="shrink-0 bg-white text-[#075955] hover:bg-amber-300 hover:text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow text-center"
+        >
+          Check Now
         </Link>
       </div>
 
-      {/* Bottom Section: Referred Stores & Recent Ledgers */}
-      <div className="grid md:grid-cols-2 gap-8">
-        
-        {/* Referred Stores */}
-        <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 space-y-6 shadow-xl">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-white text-lg flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#8b5cf6]" /> Referred Shops
-            </h3>
-            <span className="text-xs text-[#8f8bb3] font-semibold">{data?.referred_buyers?.length || 0} stores</span>
-          </div>
-          
-          <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
-            {data?.referred_buyers?.length === 0 ? (
-              <p className="text-xs text-[#8f8bb3] py-8 text-center">No referred stores yet. Share your referral code <span className="text-white font-bold">{data?.referral_code}</span> to onboard shops!</p>
-            ) : (
-              data?.referred_buyers?.map((buyer: any) => (
-                <div key={buyer.id} className="p-4 bg-[#0c0a1f] border border-[#242247] rounded-2xl flex items-center justify-between">
-                  <div>
-                    <h4 className="font-bold text-white text-sm">{buyer.business_name || buyer.name}</h4>
-                    <p className="text-[11px] text-[#8f8bb3] mt-0.5">{buyer.email}</p>
-                  </div>
-                  <div>
-                    {buyer.is_verified ? (
-                      <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Verified
-                      </span>
-                    ) : (
-                      <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Pending Admin Verification
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* 5. Points Summary / Recent Ledger List (Matching Bottom Screen Transactions view) */}
+      <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="font-extrabold text-slate-800 text-base">Recent Transactions</h3>
+          <Link href="/rep/earnings" className="text-xs font-bold text-[#0d7a75] hover:underline">
+            View All
+          </Link>
         </div>
 
-        {/* Recent Transactions */}
-        <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 space-y-6 shadow-xl">
-          <h3 className="font-bold text-white text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#8b5cf6]" /> Points Ledger
-          </h3>
-
-          <div className="space-y-4">
-            {data?.recent_transactions?.length === 0 ? (
-              <p className="text-xs text-[#8f8bb3] py-8 text-center">No transaction logs available.</p>
-            ) : (
-              data?.recent_transactions?.map((txn: any) => (
-                <div key={txn.id} className="flex items-center justify-between p-3.5 bg-[#0c0a1f] border border-[#242247] rounded-2xl">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider block">{txn.source.replace('_', ' ')}</span>
-                    <span className="text-xs text-slate-400 mt-1 block">{new Date(txn.date).toLocaleDateString()}</span>
+        <div className="space-y-2.5">
+          {data?.recent_transactions?.length === 0 ? (
+            <p className="text-xs text-slate-500 py-6 text-center">No transaction history recorded yet.</p>
+          ) : (
+            data?.recent_transactions?.slice(0, 4).map((txn: any) => (
+              <div key={txn.id} className="flex items-center justify-between p-3 rounded-2xl bg-[#f8faf9] border border-slate-100">
+                <div className="flex items-center gap-3">
+                  {/* Arrow badge matching Screenshot: green down arrow for credit, red up arrow for debit */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${
+                    txn.type === 'credit' ? 'bg-emerald-500' : 'bg-rose-500'
+                  }`}>
+                    {txn.type === 'credit' ? '↓' : '↑'}
                   </div>
-                  <div className={`font-black text-sm ${txn.type === 'credit' ? 'text-emerald-400' : 'text-[#ec4899]'}`}>
-                    {txn.type === 'credit' ? '+' : '-'}{txn.points.toLocaleString()} pts
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 capitalize block">
+                      {txn.source.replace('_', ' ')}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">
+                      {new Date(txn.date).toLocaleDateString()}
+                    </span>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+
+                <div className="bg-amber-500/15 text-slate-900 border border-amber-400/40 text-xs font-black px-2.5 py-1 rounded-full flex items-center gap-1">
+                  <Coins className="w-3.5 h-3.5 text-amber-600" />
+                  <span>{txn.type === 'credit' ? '+' : '-'}{txn.points.toLocaleString()}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
-      {/* Security Chip */}
-      <div className="flex items-center gap-3 justify-center p-4 bg-[#14122d]/40 border border-[#242247] rounded-2xl max-w-xs mx-auto">
-        <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-        <p className="text-xs font-semibold text-[#8f8bb3]">Authorized Sales Rep Portal.</p>
-      </div>
     </div>
   );
 }
+
+

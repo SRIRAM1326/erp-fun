@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { User, Copy, Check, BarChart2, ShieldCheck, Mail } from 'lucide-react';
+import { User, Copy, Check, BarChart2, ShieldCheck, Mail, Coins, Share2, HelpCircle, MessageSquare, Star, FileText, Lock, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function RepProfile() {
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -31,10 +33,16 @@ export default function RepProfile() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/login');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8b5cf6]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#0d7a75]"></div>
       </div>
     );
   }
@@ -45,82 +53,161 @@ export default function RepProfile() {
     : 100;
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
-      {/* Title */}
-      <div>
-        <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Account</span>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">My Profile</h1>
-        <p className="text-[#8f8bb3] text-sm mt-1">Manage your credentials, view metrics, and copy your referral code.</p>
+    <div className="space-y-6 max-w-4xl mx-auto pb-10">
+      
+      {/* 1. Header Banner (Matching My Account / Refer & Earn Top Teal Header in Screenshot) */}
+      <div className="bg-[#0d7a75] text-white p-6 pb-16 rounded-b-3xl md:rounded-3xl shadow-md text-center relative overflow-hidden">
+        <span className="text-xs font-bold uppercase tracking-wider text-teal-100 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+          Account Settings
+        </span>
+        <h1 className="text-2xl font-black mt-2">My Account</h1>
       </div>
 
-      {/* Profile Header */}
-      <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl flex flex-col sm:flex-row gap-6 items-center">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#8b5cf6] to-[#ec4899] flex items-center justify-center text-3xl font-black text-white shadow-xl shadow-[#8b5cf6]/10 shrink-0">
-          {(() => {
-            const name = data?.name || 'Representative';
-            const parts = name.split(' ');
-            if (parts.length >= 2) {
-              return (parts[0][0] + parts[1][0]).toUpperCase();
-            }
-            return name.slice(0, 2).toUpperCase();
-          })()}
+      {/* 2. Overlapping Centered Profile Card (Matching My Account Screen in Screenshot) */}
+      <div className="-mt-14 max-w-2xl mx-auto px-4">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-md text-center space-y-3 relative z-10">
+          
+          {/* Centered Avatar Image/Circle */}
+          <div className="w-20 h-20 rounded-full bg-[#0d7a75] text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md border-4 border-white -mt-12">
+            {(() => {
+              const name = data?.name || 'Representative';
+              const parts = name.split(' ');
+              if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+              }
+              return name.slice(0, 2).toUpperCase();
+            })()}
+          </div>
+
+          <div>
+            <h2 className="text-xl font-black text-slate-900">{data?.name || 'Representative Name'}</h2>
+            <p className="text-xs text-slate-500 font-medium">{data?.email || 'rep@partner.com'}</p>
+          </div>
+
+          {/* Total Coins Pill matching Screenshot */}
+          <div className="inline-flex items-center justify-between gap-3 bg-[#0d7a75] text-white px-5 py-2 rounded-2xl shadow-sm">
+            <span className="text-xs font-bold text-teal-100 uppercase">Total Coins</span>
+            <div className="flex items-center gap-1.5 bg-[#f59e0b] text-slate-950 font-black text-xs px-3 py-1 rounded-full shadow">
+              <Coins className="w-4 h-4 text-slate-950" />
+              <span>{(data?.points || 5879).toLocaleString()} Coins</span>
+            </div>
+          </div>
+
         </div>
-        <div className="text-center sm:text-left space-y-1">
-          <h2 className="text-xl font-extrabold text-white">{data?.name || 'Representative'}</h2>
-          <p className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Sales Partner</p>
-          <div className="flex items-center gap-1.5 text-xs text-[#8f8bb3] justify-center sm:justify-start">
-            <Mail className="w-3.5 h-3.5" />
-            <span>{data?.email || 'rep@sales.com'}</span>
+      </div>
+
+      {/* 3. Refer & Earn Card (Matching Refer & Earn Screen in Screenshot) */}
+      <div className="max-w-2xl mx-auto px-4">
+        <div className="bg-gradient-to-br from-[#0d7a75] to-[#085a56] text-white rounded-3xl p-6 shadow-md space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-amber-300 shrink-0">
+              <Share2 className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-white text-base">Spread the word &amp; Refer Stores!</h3>
+              <p className="text-xs text-teal-100 font-medium">Share your referral code with store owners. You earn 1,000 coins + 1% invoice commissions for life!</p>
+            </div>
+          </div>
+
+          {/* Referral Code Box with Copy Button matching Screenshot */}
+          <div className="bg-white p-3 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
+            <span className="font-mono text-slate-900 font-black text-lg px-2 tracking-wider">
+              {data?.referral_code || '1D235DA'}
+            </span>
+
+            <button 
+              onClick={handleCopyCode}
+              className="bg-[#2563eb] hover:bg-blue-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition-all shadow flex items-center gap-1.5 shrink-0"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-300" /> Copied!
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4" /> COPY CODE
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Referral Code Box */}
-      <div className="bg-gradient-to-r from-[#1e1b4b] to-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-4">
-        <div>
-          <h3 className="font-bold text-white text-base">Your Sales Partner Referral Code</h3>
-          <p className="text-xs text-[#8f8bb3] mt-1">Provide this code to store owners when onboarding them. You will receive 1,000 points upon their verification and 1% of all invoices paid.</p>
-        </div>
-        <div className="flex gap-2">
-          <div className="flex-1 bg-[#0c0a1f] px-4 py-3 rounded-xl border border-[#242247] font-mono text-[#ffd700] font-bold text-base flex items-center justify-between">
-            <span>{data?.referral_code || 'REF-PENDING'}</span>
-          </div>
-          <button 
-            onClick={handleCopyCode}
-            className="bg-[#8b5cf6] hover:bg-[#8b5cf6]/80 text-white p-3 rounded-xl transition-all shadow-md shadow-[#8b5cf6]/20 flex items-center justify-center"
-          >
-            {copied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Performance Analytics */}
-      <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-6">
-        <h3 className="font-bold text-white text-base flex items-center gap-2">
-          <BarChart2 className="w-5 h-5 text-[#8b5cf6]" /> Performance Analytics
-        </h3>
+      {/* 4. Menu List Items (Matching My Account List Items in Screenshot) */}
+      <div className="max-w-2xl mx-auto px-4 space-y-3">
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 bg-[#0c0a1f] border border-[#242247] rounded-2xl">
-            <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Store Conversion Rate</p>
-            <p className="text-2xl font-black text-white mt-1">{conversionRate}%</p>
-            <p className="text-[10px] text-[#8f8bb3] mt-1">{verfiedBuyersCount} verified of {data?.referred_buyers?.length || 0} referred</p>
-          </div>
-          <div className="p-4 bg-[#0c0a1f] border border-[#242247] rounded-2xl">
-            <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Average Invoice Value</p>
-            <p className="text-2xl font-black text-white mt-1">
-              ₹{data?.total_invoices > 0 ? Math.round(data.total_value / data.total_invoices).toLocaleString() : '0'}
-            </p>
-            <p className="text-[10px] text-[#8f8bb3] mt-1">Based on {data?.total_invoices || 0} invoices</p>
+        {/* Support */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Support</h4>
+              <p className="text-[11px] text-slate-400">Need help? Email us or call</p>
+            </div>
           </div>
         </div>
+
+        {/* Suggestions */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Suggestions</h4>
+              <p className="text-[11px] text-slate-400">Give opinion about the app</p>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQs */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+              <HelpCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">FAQs Description</h4>
+              <p className="text-[11px] text-slate-400">Check the FAQs</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Rate Us */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between hover:bg-slate-50 transition-all">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+              <Star className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">Rate Us</h4>
+              <p className="text-[11px] text-slate-400">Enjoying the app? Share your opinion</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Logout */}
+        <button 
+          onClick={handleLogout}
+          className="w-full bg-white border border-rose-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between hover:bg-rose-50 transition-all text-left"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+              <LogOut className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-rose-600 text-sm">Logout</h4>
+              <p className="text-[11px] text-rose-400">Sign out of account</p>
+            </div>
+          </div>
+        </button>
+
       </div>
 
-      {/* Security Chip */}
-      <div className="flex items-center gap-3 justify-center p-4 bg-[#14122d]/40 border border-[#242247] rounded-2xl max-w-xs mx-auto">
-        <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-        <p className="text-xs font-semibold text-[#8f8bb3]">Authorized Sales Partner Profile.</p>
-      </div>
     </div>
   );
 }
+
+

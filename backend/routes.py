@@ -1391,6 +1391,7 @@ def admin_upload_invoices():
         return jsonify({'message': 'Only Excel files (.xlsx, .xls) or CSV files are supported'}), 400
         
     try:
+        existing_invoices = {}
         excel_rows = read_uploaded_file_rows(file)
         if not excel_rows or len(excel_rows) < 1:
             return jsonify({'message': 'Excel sheet is empty or has no data rows'}), 400
@@ -1655,6 +1656,7 @@ def admin_upload_invoices():
                 rep_lookup[r.phone.lower().strip()] = r
 
         existing_referral_codes = set(u.referral_code for u in User.query.filter(User.referral_code != None).all() if u.referral_code)
+        existing_invoices = {inv.invoice_number.lower().strip(): inv for inv in Invoice.query.all() if inv.invoice_number}
         
         count = 0
         for invoice_number, info in invoices_dict.items():
@@ -1773,7 +1775,13 @@ def admin_upload_invoices():
                 rep_id = rep.id
                 
             status = 'paid'
-            invoice = Invoice.query.filter_by(invoice_number=invoice_number).first()
+            inv_key = invoice_number.lower().strip()
+            invoice = existing_invoices.get(inv_key)
+            if not invoice:
+                invoice = Invoice.query.filter(func.lower(Invoice.invoice_number) == inv_key).first()
+                if invoice:
+                    existing_invoices[inv_key] = invoice
+
             is_new_payment = False
             
             if invoice:
@@ -1802,8 +1810,26 @@ def admin_upload_invoices():
                     created_at=datetime.utcnow()
                 )
                 db.session.add(invoice)
+                existing_invoices[inv_key] = invoice
                 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as commit_err:
+                db.session.rollback()
+                invoice = Invoice.query.filter(func.lower(Invoice.invoice_number) == inv_key).first()
+                if invoice:
+                    existing_invoices[inv_key] = invoice
+                    if invoice.status != 'paid' and status == 'paid':
+                        is_new_payment = True
+                    invoice.buyer_id = buyer.id
+                    invoice.rep_id = rep_id
+                    invoice.amount = amount
+                    invoice.status = status
+                    invoice.products = products_str
+                    db.session.commit()
+                else:
+                    print(f"Warning: Could not process invoice {invoice_number}: {commit_err}")
+                    continue
             
             if is_new_payment:
                 invoice.paid_at = datetime.utcnow()

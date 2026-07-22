@@ -34,6 +34,14 @@ def create_app(config_class=Config):
             db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS tag_description VARCHAR(255);"))
             db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS recipient_customer BOOLEAN DEFAULT TRUE;"))
             db.session.execute(text("ALTER TABLE product ADD COLUMN IF NOT EXISTS recipient_rep BOOLEAN DEFAULT FALSE;"))
+
+            # Invoice & PointsTransaction column size migrations
+            db.session.execute(text("ALTER TABLE invoice ALTER COLUMN products TYPE TEXT;"))
+            db.session.execute(text("ALTER TABLE invoice ALTER COLUMN invoice_number TYPE VARCHAR(100);"))
+            try:
+                db.session.execute(text("ALTER TABLE points_transaction ALTER COLUMN rule_applied TYPE VARCHAR(255);"))
+            except Exception:
+                pass
             db.session.commit()
         except Exception as e:
             db.session.rollback()

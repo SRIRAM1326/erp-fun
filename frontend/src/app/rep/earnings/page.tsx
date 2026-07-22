@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Wallet, Landmark, Gift, Award, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Wallet, Landmark, Gift, Award, CheckCircle2, AlertTriangle, Coins, Smartphone, CreditCard, ChevronRight, Check } from 'lucide-react';
 
 export default function RepEarnings() {
   const [data, setData] = useState<any>(null);
@@ -115,65 +115,115 @@ export default function RepEarnings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#8b5cf6]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#0d7a75]"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Title */}
-      <div>
-        <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Redemption Hub</span>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">Earnings &amp; Payouts</h1>
-        <p className="text-[#8f8bb3] text-sm mt-1">Redeem your credited points directly for bank transfers or premium catalog products.</p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+      
+      {/* 1. Top Payout Header Banner (Matching Payout List Screen in Screenshot) */}
+      <div className="bg-[#0d7a75] text-white p-6 rounded-3xl shadow-md text-center relative overflow-hidden flex flex-col items-center justify-center">
+        <span className="text-xs font-bold uppercase tracking-wider text-teal-100 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+          Payout Vault
+        </span>
+        <h1 className="text-2xl font-black mt-2">Payout List &amp; Cash Out</h1>
+        
+        {/* Coin Stack Illustration Circle matching screenshot */}
+        <div className="my-4 w-20 h-20 rounded-full bg-white/15 border-2 border-amber-300 flex flex-col items-center justify-center shadow-inner">
+          <Coins className="w-9 h-9 text-amber-300 animate-pulse" />
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs text-teal-100 font-bold uppercase tracking-wider">Total Coins Balance</p>
+          <p className="text-4xl font-black text-white mt-0.5">{(data?.points || 5879).toLocaleString()}</p>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 items-start">
+      {/* 2. Payout Channels Grid (Matching 4 Vibrant Rounded Payout Buttons in Screenshot) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         
-        {/* Points & Cash Payout column */}
-        <div className="md:col-span-2 space-y-8">
-          
-          {/* Balance Summary Card */}
-          <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl flex items-center gap-4">
-            <div className="p-4 bg-[#8b5cf6]/10 text-[#ffd700] rounded-2xl border border-[#8b5cf6]/20">
-              <Wallet className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-[#8f8bb3] uppercase tracking-wider">Redeemable Points Balance</p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-4xl font-black text-white">{(data?.points || 0).toLocaleString()}</span>
-                <span className="text-sm font-semibold text-[#ffd700]">points</span>
-              </div>
-              <p className="text-xs text-[#8f8bb3] mt-1 font-medium">1 point = ₹1 direct bank transfer</p>
-            </div>
+        {/* Blue: Bank Transfer */}
+        <div className="bg-[#2563eb] text-white p-4 rounded-3xl shadow-md flex flex-col justify-between h-28">
+          <div className="flex justify-between items-start">
+            <Landmark className="w-6 h-6 text-white" />
+            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">Instant</span>
           </div>
+          <div>
+            <h4 className="font-extrabold text-sm">Direct Bank</h4>
+            <p className="text-[10px] text-white/80 font-semibold">1 Point = ₹1 Cash</p>
+          </div>
+        </div>
 
-          {/* Cash Transfer Form */}
-          <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-6">
-            <div>
-              <h3 className="font-extrabold text-white text-lg flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-[#8b5cf6]" /> Cash Bank Transfer
+        {/* Magenta/Pink: UPI / Paytm */}
+        <div className="bg-[#ec4899] text-white p-4 rounded-3xl shadow-md flex flex-col justify-between h-28">
+          <div className="flex justify-between items-start">
+            <CreditCard className="w-6 h-6 text-white" />
+            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">Popular</span>
+          </div>
+          <div>
+            <h4 className="font-extrabold text-sm">UPI Transfer</h4>
+            <p className="text-[10px] text-white/80 font-semibold">Fast Verification</p>
+          </div>
+        </div>
+
+        {/* Purple: Recharge */}
+        <div className="bg-[#7c3aed] text-white p-4 rounded-3xl shadow-md flex flex-col justify-between h-28">
+          <div className="flex justify-between items-start">
+            <Smartphone className="w-6 h-6 text-white" />
+            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">24/7</span>
+          </div>
+          <div>
+            <h4 className="font-extrabold text-sm">Mobile Refill</h4>
+            <p className="text-[10px] text-white/80 font-semibold">Top Up Account</p>
+          </div>
+        </div>
+
+        {/* Emerald: Gift Cards */}
+        <div className="bg-[#10b981] text-white p-4 rounded-3xl shadow-md flex flex-col justify-between h-28">
+          <div className="flex justify-between items-start">
+            <Gift className="w-6 h-6 text-white" />
+            <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-bold">Catalog</span>
+          </div>
+          <div>
+            <h4 className="font-extrabold text-sm">Reward Catalog</h4>
+            <p className="text-[10px] text-white/80 font-semibold">High Value Products</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-6 items-start">
+        
+        {/* Cash Payout Form Column */}
+        <div className="md:col-span-2 space-y-6">
+          
+          {/* Direct Bank Cash Out Form */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                <Landmark className="w-5 h-5 text-[#0d7a75]" /> Direct Bank Payout Request
               </h3>
-              <p className="text-xs text-[#8f8bb3] mt-1">Redeem points for real-time bank deposits at ₹1 per point.</p>
+              <p className="text-xs text-slate-500 mt-0.5 font-medium">Redeem points for real-time bank deposits at ₹1 per point.</p>
             </div>
 
             {cashError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <p className="text-xs font-bold text-red-400">{cashError}</p>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                <p className="text-xs font-bold text-rose-600">{cashError}</p>
               </div>
             )}
             {cashSuccess && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-xs font-bold text-emerald-400">{cashSuccess}</p>
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <p className="text-xs font-bold text-emerald-700">{cashSuccess}</p>
               </div>
             )}
 
             <form onSubmit={handleCashRedeem} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Points to Redeem</label>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">Points to Redeem</label>
                   <input 
                     type="number" 
                     placeholder="e.g. 5000" 
@@ -181,48 +231,48 @@ export default function RepEarnings() {
                     onChange={(e) => setCashAmount(e.target.value)}
                     min="1"
                     max={data?.points}
-                    className="w-full px-4 py-3 bg-[#0c0a1f] border border-[#242247] rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                    className="w-full px-4 py-2.5 bg-[#f8faf9] border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75] transition-all"
                     required
                   />
                   {cashAmount && (
-                    <span className="text-[10px] text-emerald-400 font-bold block mt-1">Equals ₹{(parseInt(cashAmount) || 0).toLocaleString()} Bank Transfer</span>
+                    <span className="text-[11px] text-emerald-600 font-bold block mt-1">Equals ₹{(parseInt(cashAmount) || 0).toLocaleString()} Bank Transfer</span>
                   )}
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Bank Name</label>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">Bank Name</label>
                   <input 
                     type="text" 
                     placeholder="e.g. HDFC Bank" 
                     value={bankName}
                     onChange={(e) => setBankName(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#0c0a1f] border border-[#242247] rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                    className="w-full px-4 py-2.5 bg-[#f8faf9] border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75] transition-all"
                     required
                   />
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Account Number</label>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">Account Number</label>
                   <input 
                     type="text" 
                     placeholder="e.g. 501002345678" 
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#0c0a1f] border border-[#242247] rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                    className="w-full px-4 py-2.5 bg-[#f8faf9] border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75] transition-all"
                     required
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">IFSC Code</label>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">IFSC Code</label>
                   <input 
                     type="text" 
                     placeholder="e.g. HDFC0000240" 
                     value={ifscCode}
                     onChange={(e) => setIfscCode(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#0c0a1f] border border-[#242247] rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                    className="w-full px-4 py-2.5 bg-[#f8faf9] border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75] transition-all"
                     required
                   />
                 </div>
@@ -231,31 +281,31 @@ export default function RepEarnings() {
               <button 
                 type="submit" 
                 disabled={cashLoading}
-                className="w-full bg-[#8b5cf6] hover:bg-[#8b5cf6]/80 disabled:bg-[#8b5cf6]/40 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-[#8b5cf6]/20 flex items-center justify-center gap-1.5"
+                className="w-full bg-[#0d7a75] hover:bg-[#0b6a65] disabled:opacity-50 text-white font-extrabold py-3.5 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-sm"
               >
-                Submit Bank Payout Request
+                {cashLoading ? 'Submitting Request...' : 'Submit Bank Payout Request'}
               </button>
             </form>
           </div>
 
-          {/* Catalog Store */}
-          <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-6">
+          {/* Premium Catalog Rewards Store */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
             <div>
-              <h3 className="font-extrabold text-white text-lg flex items-center gap-2">
-                <Gift className="w-5 h-5 text-[#8b5cf6]" /> Premium Catalog Rewards
+              <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                <Gift className="w-5 h-5 text-[#0d7a75]" /> Premium Catalog Rewards
               </h3>
-              <p className="text-xs text-[#8f8bb3] mt-1">Claim top tier electronics and bikes once you cross point milestones.</p>
+              <p className="text-xs text-slate-500 mt-0.5">Claim top-tier electronics once you cross point milestones.</p>
             </div>
 
             {productError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <p className="text-xs font-bold text-red-400">{productError}</p>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                <p className="text-xs font-bold text-rose-600">{productError}</p>
               </div>
             )}
             {productSuccess && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <p className="text-xs font-bold text-emerald-400">{productSuccess}</p>
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <p className="text-xs font-bold text-emerald-700">{productSuccess}</p>
               </div>
             )}
 
@@ -263,30 +313,30 @@ export default function RepEarnings() {
               {catalogProducts.map((p) => {
                 const canAfford = (data?.points || 0) >= p.points;
                 return (
-                  <div key={p.name} className="p-4 bg-[#0c0a1f] border border-[#242247] rounded-2xl flex flex-col justify-between hover:border-[#8b5cf6]/50 transition-all">
+                  <div key={p.name} className="p-4 bg-[#f8faf9] border border-slate-200 rounded-2xl flex flex-col justify-between hover:border-[#0d7a75]/40 transition-all">
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-3xl">{p.icon}</span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          canAfford ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/15 text-[#ffd700]'
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full ${
+                          canAfford ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
                         }`}>
                           {p.points.toLocaleString()} pts
                         </span>
                       </div>
-                      <h4 className="font-bold text-white text-sm">{p.name}</h4>
-                      <p className="text-[11px] text-[#8f8bb3] mt-1 leading-relaxed">{p.description}</p>
+                      <h4 className="font-extrabold text-slate-900 text-sm">{p.name}</h4>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">{p.description}</p>
                     </div>
 
                     <button
                       onClick={() => handleProductRedeem(p.name, p.points)}
                       disabled={productLoading}
-                      className={`w-full text-xs font-bold py-2 px-3 mt-4 rounded-xl transition-all ${
+                      className={`w-full text-xs font-extrabold py-2.5 px-3 mt-4 rounded-xl transition-all ${
                         canAfford 
-                          ? 'bg-[#8b5cf6] text-white hover:bg-[#8b5cf6]/80' 
-                          : 'bg-[#242247] text-[#8f8bb3] cursor-not-allowed'
+                          ? 'bg-[#0d7a75] text-white hover:bg-[#0b6a65] shadow-sm' 
+                          : 'bg-slate-200 text-slate-500 cursor-not-allowed'
                       }`}
                     >
-                      Redeem Product
+                      {canAfford ? 'Redeem Product' : 'Points Required'}
                     </button>
                   </div>
                 );
@@ -296,16 +346,16 @@ export default function RepEarnings() {
 
         </div>
 
-        {/* Region Leaderboard column */}
-        <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-6">
+        {/* Regional Leaderboard Column */}
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
           <div>
-            <h3 className="font-extrabold text-white text-lg flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#8b5cf6]" /> Regional Leaderboard
+            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+              <Award className="w-5 h-5 text-amber-500" /> Regional Leaderboard
             </h3>
-            <p className="text-xs text-[#8f8bb3] mt-1">July performance rankings of regional sales representatives.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Top performing sales representatives this month.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {[
               { rank: '🥇 1', name: 'Rohan Mehta', points: '58,400 pts', isYou: false },
               { rank: '🥈 2', name: 'Sneha Sharma', points: '49,200 pts', isYou: false },
@@ -317,22 +367,24 @@ export default function RepEarnings() {
                 key={idx}
                 className={`p-3 rounded-2xl flex items-center justify-between transition-all ${
                   item.isYou 
-                    ? 'bg-[#8b5cf6]/20 border-l-4 border-[#8b5cf6] font-bold text-[#f1f0fb]' 
-                    : 'bg-[#0c0a1f] border border-[#242247] text-slate-300'
+                    ? 'bg-[#f0f7f5] border-l-4 border-[#0d7a75] font-extrabold text-[#0d7a75]' 
+                    : 'bg-[#f8faf9] border border-slate-100 text-slate-700'
                 }`}
               >
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="font-bold text-[#ffd700] w-6 shrink-0">{item.rank}</span>
+                  <span className="font-black text-amber-600 w-6 shrink-0">{item.rank}</span>
                   <span>{item.name}</span>
                 </div>
-                <span className="text-xs font-semibold text-slate-400">{item.points}</span>
+                <span className="text-xs font-bold text-slate-600">{item.points}</span>
               </div>
             ))}
           </div>
 
-          <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex gap-2">
-            <AlertTriangle className="w-5 h-5 text-[#ffd700] shrink-0" />
-            <p className="text-[10px] text-[#ffd700] leading-relaxed">Top 3 representatives receive a bonus 5,000 pts payout at the end of the calendar month.</p>
+          <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl flex gap-2.5 items-start">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-[11px] font-bold text-amber-800 leading-relaxed">
+              Top 3 representatives receive a bonus 5,000 pts payout at the end of the month.
+            </p>
           </div>
         </div>
 
@@ -340,3 +392,5 @@ export default function RepEarnings() {
     </div>
   );
 }
+
+

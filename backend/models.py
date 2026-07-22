@@ -72,7 +72,7 @@ class Campaign(db.Model):
 
 class Invoice(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    invoice_number = db.Column(db.String(50), unique=True, nullable=False)
+    invoice_number = db.Column(db.String(100), unique=True, nullable=False)
     buyer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     rep_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     amount = db.Column(db.Float, nullable=False)
@@ -82,7 +82,7 @@ class Invoice(db.Model):
     
     points_customer = db.Column(db.Integer, default=0)
     points_rep = db.Column(db.Integer, default=0)
-    products = db.Column(db.String(255), nullable=True) # comma-separated product names
+    products = db.Column(db.Text, nullable=True) # comma-separated product names
     config_version = db.Column(db.Integer, nullable=True)
     
     buyer = db.relationship('User', foreign_keys=[buyer_id], backref='invoices')

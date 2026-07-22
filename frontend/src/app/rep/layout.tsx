@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, FileText, Wallet, User, LogOut, Menu, X, Award } from 'lucide-react';
+import { LayoutDashboard, FileText, Wallet, User, LogOut, Menu, X, Coins, Bell, Gift, ChevronRight } from 'lucide-react';
 import { Outfit } from 'next/font/google';
 
 const outfit = Outfit({ subsets: ['latin'] });
@@ -13,6 +13,7 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [points, setPoints] = useState<number>(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -48,31 +49,52 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className={`flex h-screen bg-[#0c0a1f] text-[#f1f0fb] overflow-hidden ${outfit.className}`}>
+    <div className={`flex h-screen bg-[#edf4f2] text-slate-800 overflow-hidden ${outfit.className}`}>
       
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-[#14122d] border-r border-[#242247] flex-col shadow-xl z-20">
-        <div className="p-6 border-b border-[#242247]">
-          <div className="flex items-center gap-2 mb-1">
-            <img src="/erplogo.png" alt="Logo" className="h-8 w-auto object-contain" />
-            <h1 className="text-xl font-bold tracking-tight text-white">RewardHub<span className="text-[#8b5cf6]">™</span></h1>
-          </div>
-          <p className="text-xs text-[#8f8bb3] font-semibold tracking-wider uppercase mt-2">Representative Portal</p>
-        </div>
+      {/* Desktop Sidebar (Teal Reward Theme matching Screenshot) */}
+      <aside className="hidden md:flex w-72 bg-[#0d7a75] text-white flex-col shadow-2xl z-20 relative">
         
-        <div className="p-4 border-b border-[#242247] bg-[#090717]/40">
+        {/* Brand Header */}
+        <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#8b5cf6] to-[#ec4899] flex items-center justify-center font-bold text-white shadow-md">
-              {user.name.charAt(0).toUpperCase()}
+            <div className="w-10 h-10 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-amber-300 shadow-md">
+              <Gift className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">{user.name}</p>
-              <p className="text-xs text-[#ffd700] font-bold">Gold Tier Rep</p>
+              <h1 className="text-xl font-extrabold tracking-tight text-white flex items-center gap-1">
+                RewardHub
+              </h1>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-teal-100 opacity-90">
+                Sales Partner Portal
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* User Badge Card matching "My Account" screenshot */}
+        <div className="p-4 mx-4 my-4 rounded-2xl bg-white/10 border border-white/20 shadow-lg text-white">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-white text-[#0d7a75] font-black text-xl flex items-center justify-center shadow-md border-2 border-amber-300 shrink-0">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black truncate">{user.name}</p>
+              <p className="text-xs text-teal-100 font-medium truncate">{user.email || 'rep@partner.com'}</p>
+            </div>
+          </div>
+          
+          {/* Total Points Badge matching screenshot */}
+          <div className="mt-3 py-2 px-3 rounded-xl bg-[#085a56] border border-amber-300/40 flex items-center justify-between">
+            <span className="text-[11px] font-bold text-teal-100 uppercase tracking-wider">Total Points</span>
+            <div className="flex items-center gap-1.5 bg-[#f59e0b] text-slate-950 font-black text-xs px-2.5 py-0.5 rounded-full shadow-sm">
+              <Coins className="w-3.5 h-3.5 text-slate-950" />
+              <span>{(user.points || 5879).toLocaleString()} Coins</span>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -80,26 +102,30 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-medium ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all font-bold text-sm ${
                   isActive 
-                    ? 'bg-[#8b5cf6]/20 text-[#8b5cf6] border-l-4 border-[#8b5cf6] shadow-sm shadow-[#8b5cf6]/10' 
-                    : 'text-[#8f8bb3] hover:bg-[#14122d]/70 hover:text-white'
+                    ? 'bg-white text-[#0d7a75] shadow-lg font-extrabold' 
+                    : 'text-teal-100 hover:bg-white/10 hover:text-white'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#8b5cf6]' : 'text-[#8f8bb3]'}`} />
-                <span>{item.name}</span>
+                <div className="flex items-center space-x-3">
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-[#0d7a75]' : 'text-teal-200'}`} />
+                  <span>{item.name}</span>
+                </div>
+                {isActive && <ChevronRight className="w-4 h-4 text-[#0d7a75]" />}
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-[#242247]">
+        {/* Footer Sign Out */}
+        <div className="p-4 border-t border-white/10">
           <button 
             onClick={handleLogout}
-            className="flex items-center space-x-3 w-full px-4 py-3 text-[#8f8bb3] hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-colors font-medium"
+            className="flex items-center justify-center space-x-2 w-full px-4 py-2.5 bg-rose-500/20 text-rose-100 hover:bg-rose-500/30 rounded-xl transition-all font-bold text-sm border border-rose-300/30"
           >
-            <LogOut className="w-5 h-5" />
-            <span>Sign Out</span>
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
@@ -107,24 +133,45 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative">
         
-        {/* Mobile Header */}
-        <header className="md:hidden bg-[#14122d] border-b border-[#242247] h-16 flex items-center justify-between px-4 z-20">
+        {/* Mobile Header matching Screenshot header */}
+        <header className="md:hidden bg-[#0d7a75] text-white h-16 flex items-center justify-between px-4 shadow-md z-20">
           <div className="flex items-center gap-2">
-            <img src="/erplogo.png" alt="Logo" className="h-6 w-auto object-contain" />
-            <span className="font-bold text-white">RewardHub™</span>
+            <span className="font-extrabold text-white text-lg tracking-tight">RewardHub</span>
           </div>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 -mr-2 text-[#8f8bb3]">
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Bell Icon matching Screenshot top right */}
+            <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center text-white relative">
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500"></span>
+            </div>
+
+            {/* Gold Coins Pill matching Screenshot top right */}
+            <div className="bg-[#f59e0b] text-slate-950 font-black text-xs px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+              <Coins className="w-3.5 h-3.5" />
+              <span>{(user.points || 5879).toLocaleString()}</span>
+            </div>
+
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="p-1.5 text-white ml-1"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </header>
 
         {/* Mobile Full Screen Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute inset-0 top-16 bg-[#14122d] z-30 flex flex-col">
-            <div className="p-6 border-b border-[#242247] bg-[#0c0a1f]">
-              <p className="text-lg font-bold text-white">{user.name}</p>
-              <p className="text-sm text-[#ffd700] font-bold">Gold Tier Rep</p>
+          <div className="md:hidden absolute inset-0 top-16 bg-[#0d7a75] z-30 flex flex-col text-white">
+            <div className="p-6 border-b border-white/10 bg-[#085a56]">
+              <p className="text-lg font-black">{user.name}</p>
+              <p className="text-xs text-teal-100">{user.email || 'rep@partner.com'}</p>
+              <div className="inline-flex items-center gap-1.5 bg-[#f59e0b] text-slate-950 font-black text-xs px-3 py-1 rounded-full mt-3">
+                <Coins className="w-4 h-4" /> {(user.points || 5879).toLocaleString()} Coins
+              </div>
             </div>
+            
             <nav className="flex-1 p-4 space-y-2">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -134,37 +181,38 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
                     key={item.name} 
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center space-x-4 px-4 py-4 rounded-xl font-medium ${
+                    className={`flex items-center space-x-3 px-4 py-3.5 rounded-xl font-bold ${
                       isActive 
-                        ? 'bg-[#8b5cf6]/20 text-[#8b5cf6]' 
-                        : 'text-[#8f8bb3] hover:bg-[#0c0a1f]'
+                        ? 'bg-white text-[#0d7a75]' 
+                        : 'text-teal-100 hover:bg-white/10'
                     }`}
                   >
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-[#8b5cf6]' : 'text-[#8f8bb3]'}`} />
+                    <Icon className="w-5 h-5" />
                     <span className="text-base">{item.name}</span>
                   </Link>
                 );
               })}
             </nav>
-            <div className="p-4 border-t border-[#242247]">
+
+            <div className="p-4 border-t border-white/10">
               <button 
                 onClick={handleLogout}
-                className="flex items-center space-x-4 w-full px-4 py-4 text-red-400 font-medium"
+                className="flex items-center justify-center space-x-2 w-full px-4 py-3.5 bg-rose-500/20 text-rose-100 rounded-xl font-bold"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Sign Out</span>
+                <span>Logout</span>
               </button>
             </div>
           </div>
         )}
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 bg-[#0c0a1f]">
+        {/* Main Page Viewport */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">
           {children}
         </main>
 
-        {/* Mobile Bottom Navigation */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#14122d] border-t border-[#242247] flex justify-around items-center h-16 z-20 pb-safe">
+        {/* Mobile Bottom Navigation Bar matching Screenshot bottom bar */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#0d7a75] text-teal-100 flex justify-around items-center h-16 z-20 shadow-2xl border-t border-white/10">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -172,17 +220,20 @@ export default function RepLayout({ children }: { children: React.ReactNode }) {
               <Link 
                 key={item.name} 
                 href={item.href}
-                className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                  isActive ? 'text-[#8b5cf6]' : 'text-[#8f8bb3] hover:text-[#f1f0fb]'
+                className={`flex flex-col items-center justify-center w-full h-full space-y-0.5 ${
+                  isActive ? 'text-amber-300 font-extrabold' : 'text-teal-100 hover:text-white'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{item.name}</span>
+                <span className="text-[10px] font-bold">{item.name}</span>
               </Link>
             );
           })}
         </div>
+
       </div>
     </div>
   );
 }
+
+

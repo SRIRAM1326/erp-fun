@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { FileText, Plus, Search, HelpCircle, CheckCircle2, Clock } from 'lucide-react';
+import { FileText, Plus, Search, HelpCircle, CheckCircle2, Clock, Coins, ChevronRight } from 'lucide-react';
 
 export default function RepInvoices() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -61,96 +61,104 @@ export default function RepInvoices() {
   });
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+    <div className="space-y-6 max-w-5xl mx-auto pb-10">
+      
+      {/* 1. Header Banner (Matching Offerwalls Top Header in Screenshot) */}
+      <div className="bg-[#0d7a75] text-white p-6 rounded-3xl shadow-md flex justify-between items-center">
         <div>
-          <span className="text-xs font-bold text-[#8b5cf6] uppercase tracking-wider">Management</span>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mt-1">My Invoices</h1>
-          <p className="text-[#8f8bb3] text-sm mt-1">Register invoices issued to referred customers and monitor point breakdowns.</p>
+          <span className="text-xs font-bold uppercase tracking-wider text-teal-100 bg-white/10 px-3 py-1 rounded-full border border-white/20">
+            Invoices &amp; Commissions
+          </span>
+          <h1 className="text-2xl font-black mt-1.5">Offerwalls &amp; Link Invoices</h1>
+          <p className="text-xs text-teal-100 mt-0.5 font-medium">Link wholesale invoices to earn 1% commission coins on settlement.</p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 items-start">
+      <div className="grid md:grid-cols-3 gap-6 items-start">
         
         {/* Link Invoice Card */}
-        <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 shadow-xl space-y-6">
-          <div>
-            <h3 className="font-extrabold text-white text-lg flex items-center gap-2">
-              <Plus className="w-5 h-5 text-[#8b5cf6]" /> Link Invoice
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+              <Plus className="w-5 h-5 text-[#0d7a75]" /> Link Wholesale Invoice
             </h3>
-            <p className="text-xs text-[#8f8bb3] mt-1">Link a wholesale invoice to receive your 1.0% commission in reward points.</p>
+            <p className="text-xs text-slate-500 mt-0.5 font-medium">Enter customer invoice number to tie sales points.</p>
           </div>
 
           <form onSubmit={handleLinkInvoice} className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-                <p className="text-xs font-bold text-red-400">{error}</p>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                <p className="text-xs font-bold text-rose-600">{error}</p>
               </div>
             )}
             {success && (
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                <p className="text-xs font-bold text-emerald-400">{success}</p>
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                <p className="text-xs font-bold text-emerald-700">{success}</p>
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Invoice Number</label>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-extrabold text-slate-600 tracking-wider">Invoice Number</label>
               <input 
                 type="text" 
                 placeholder="e.g. INV-2247" 
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
-                className="w-full px-4 py-3 bg-[#0c0a1f] border border-[#242247] rounded-xl text-sm font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                className="w-full px-4 py-2.5 bg-[#f8faf9] border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75] transition-all"
                 required
               />
-              <p className="text-[10px] text-[#8f8bb3] mt-1 italic">Type any invoice code; unseeded codes will mock-create automatically for testing.</p>
+              <p className="text-[10px] text-slate-400 mt-1 italic font-medium">Type any invoice code for mock auto-link.</p>
             </div>
 
             <button 
               type="submit" 
               disabled={actionLoading}
-              className="w-full bg-[#8b5cf6] hover:bg-[#8b5cf6]/80 disabled:bg-[#8b5cf6]/40 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-[#8b5cf6]/20 flex items-center justify-center gap-1"
+              className="w-full bg-[#0d7a75] hover:bg-[#0b6a65] disabled:opacity-50 text-white font-extrabold py-3.5 rounded-xl transition-all shadow-md text-sm flex items-center justify-center gap-1.5"
             >
               {actionLoading ? 'Linking...' : 'Link Invoice'}
             </button>
           </form>
 
-          <div className="p-4 bg-[#090717]/50 border border-[#242247] rounded-2xl space-y-3">
-            <h4 className="text-xs font-bold text-white flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5 text-[#ffd700]" /> Earning Rules</h4>
-            <ul className="text-[11px] text-[#8f8bb3] space-y-2 list-disc list-inside">
-              <li>Rep Commission: 1% of total invoice value.</li>
-              <li>Commission credits <b className="text-white">only after</b> customer completes invoice payment.</li>
-              <li>Customer receives full standard points independently (doubled if paid within 7 days).</li>
+          <div className="p-4 bg-[#f8faf9] border border-slate-200 rounded-2xl space-y-2">
+            <h4 className="text-xs font-bold text-[#0d7a75] flex items-center gap-1.5">
+              <HelpCircle className="w-4 h-4" /> Commission Rules
+            </h4>
+            <ul className="text-xs text-slate-600 space-y-1.5 list-disc list-inside font-medium">
+              <li>Rep Commission: <b>1% of invoice value</b></li>
+              <li>Points credited upon customer payment completion</li>
+              <li>Customer receives standard reward points independently</li>
             </ul>
           </div>
         </div>
 
-        {/* Linked Invoices Feed */}
-        <div className="md:col-span-2 space-y-6">
+        {/* Offerwalls / Invoices Feed Column */}
+        <div className="md:col-span-2 space-y-4">
           
-          {/* Filters and Search */}
-          <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8f8bb3]" />
+          {/* Top Tab Bar matching Screenshot ("History" vs "Requests" style) */}
+          <div className="bg-white border border-slate-200 rounded-3xl p-3 flex flex-col sm:flex-row gap-3 items-center justify-between shadow-sm">
+            
+            {/* Search */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search invoices or customer..." 
+                placeholder="Search invoice or buyer..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-[#0c0a1f] border border-[#242247] rounded-xl text-xs font-semibold text-white focus:outline-none focus:border-[#8b5cf6] transition-all"
+                className="w-full pl-9 pr-3 py-2 bg-[#f8faf9] border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#0d7a75]"
               />
             </div>
             
-            <div className="flex gap-2 w-full sm:w-auto">
+            {/* Tabs matching Screenshot underline style */}
+            <div className="flex border-b border-slate-200 w-full sm:w-auto">
               {['all', 'pending', 'paid'].map((t) => (
                 <button
                   key={t}
                   onClick={() => setFilter(t)}
-                  className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold capitalize transition-all border ${
+                  className={`px-5 py-2 text-xs font-extrabold capitalize transition-all border-b-2 -mb-px ${
                     filter === t 
-                      ? 'bg-[#8b5cf6] text-white border-[#8b5cf6] shadow-md shadow-[#8b5cf6]/20' 
-                      : 'bg-[#0c0a1f] text-[#8f8bb3] border-[#242247] hover:text-white'
+                      ? 'border-[#0d7a75] text-[#0d7a75]' 
+                      : 'border-transparent text-slate-400 hover:text-slate-700'
                   }`}
                 >
                   {t}
@@ -159,67 +167,60 @@ export default function RepInvoices() {
             </div>
           </div>
 
-          {/* List */}
-          <div className="space-y-4">
+          {/* Offerwalls / Invoice Cards matching Screenshot list style */}
+          <div className="space-y-3">
             {loading ? (
-              <div className="text-center py-12 text-[#8f8bb3] font-semibold">Loading linked invoices...</div>
+              <div className="text-center py-12 text-slate-500 font-bold">Loading invoices...</div>
             ) : filteredInvoices.length === 0 ? (
-              <div className="bg-[#14122d] border border-[#242247] rounded-3xl p-12 text-center text-[#8f8bb3] font-semibold">
+              <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center text-slate-500 font-bold shadow-sm">
                 No invoices found matching criteria.
               </div>
             ) : (
               filteredInvoices.map((inv) => (
-                <div key={inv.id} className="bg-[#14122d] border border-[#242247] rounded-3xl p-6 space-y-4 shadow-xl">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-extrabold text-white text-base flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-[#8b5cf6]" /> {inv.invoice_number}
-                      </h4>
-                      <p className="text-xs text-[#8f8bb3] mt-1">Customer: <b className="text-white">{inv.buyer_name}</b> &middot; Issued {new Date(inv.created_at).toLocaleDateString()}</p>
+                <div key={inv.id} className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3 hover:border-[#0d7a75]/40 transition-all">
+                  
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Brand box matching Screenshot Offerwall cards */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-[#f0f7f5] border border-[#0d7a75]/30 text-[#0d7a75] flex items-center justify-center font-black text-sm shrink-0">
+                        INV
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                          {inv.invoice_number}
+                        </h4>
+                        <p className="text-xs text-slate-500 font-medium">Customer: <b className="text-slate-800">{inv.buyer_name}</b></p>
+                      </div>
                     </div>
-                    <div>
+
+                    <div className="text-right">
                       {inv.status === 'paid' ? (
-                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Paid & Credited
+                        <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-3 py-1 rounded-full inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Paid
                         </span>
                       ) : (
-                        <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold px-3 py-1 rounded-xl flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5 animate-pulse" /> Awaiting Payment
+                        <span className="bg-amber-100 text-amber-800 text-xs font-black px-3 py-1 rounded-full inline-flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" /> Pending
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="p-4 bg-[#0c0a1f] rounded-2xl flex items-center justify-between border border-[#242247]">
+                  <div className="p-3 bg-[#f8faf9] rounded-2xl flex items-center justify-between border border-slate-100 text-xs">
                     <div>
-                      <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Invoice value</p>
-                      <p className="text-lg font-black text-white">₹{inv.amount.toLocaleString()}</p>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Invoice Amount</span>
+                      <span className="font-black text-slate-900 text-sm">₹{inv.amount.toLocaleString()}</span>
                     </div>
-                    {inv.status === 'paid' && inv.paid_at && (
-                      <div className="text-right">
-                        <p className="text-[10px] uppercase font-bold text-[#8f8bb3] tracking-wider">Paid On</p>
-                        <p className="text-xs font-bold text-slate-300">{new Date(inv.paid_at).toLocaleDateString()}</p>
+
+                    <div className="text-right">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Your 1% Commission</span>
+                      <div className="bg-amber-500/15 text-slate-950 font-black px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 text-xs">
+                        <Coins className="w-3.5 h-3.5 text-amber-600" />
+                        <span>+{inv.status === 'paid' ? inv.points_rep : intPoints(inv.amount * 0.01)} Coins</span>
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Split Grid */}
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="p-4 bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 rounded-2xl">
-                      <p className="text-[10px] uppercase font-bold text-[#8b5cf6] tracking-wider">Rep Rewards Commission</p>
-                      <p className="text-2xl font-black text-white mt-1">
-                        {inv.status === 'paid' ? inv.points_rep : intPoints(inv.amount * 0.01)} <span className="text-xs font-semibold text-[#8f8bb3]">PTS</span>
-                      </p>
-                      <p className="text-[10px] text-[#8f8bb3] mt-1">1% of invoice total</p>
-                    </div>
-                    <div className="p-4 bg-[#090717] border border-[#242247] rounded-2xl">
-                      <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Customer Rewards Earned</p>
-                      <p className="text-2xl font-black text-white mt-1">
-                        {inv.status === 'paid' ? inv.points_customer : `Up to ${intPoints(inv.amount * 0.02)}`} <span className="text-xs font-semibold text-[#8f8bb3]">PTS</span>
-                      </p>
-                      <p className="text-[10px] text-[#8f8bb3] mt-1">Base 1%, doubled if paid within 7 days</p>
-                    </div>
-                  </div>
                 </div>
               ))
             )}
@@ -235,3 +236,5 @@ export default function RepInvoices() {
 function intPoints(num: number) {
   return Math.round(num).toLocaleString();
 }
+
+
